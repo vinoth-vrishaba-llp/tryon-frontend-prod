@@ -1,0 +1,5 @@
+{
+  "name": "ai-try-on-hyperreach",
+  "description": "An AI-powered virtual try-on web app that uses Google's Gemini to create realistic images of users wearing different clothing items. The app provides separate flows for men's and women's apparel with various product categories.",
+  "requestFramePermissions": []
+}
