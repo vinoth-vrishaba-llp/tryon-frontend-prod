@@ -128,7 +128,7 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ adminUser, userId, on
                                     <p className="text-2xl font-black text-gray-900">{details.usageInsights.totalImages}</p>
                                 </div>
                                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">Tokens Used</p>
+                                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">Credits Used</p>
                                     <p className="text-2xl font-black text-primary">{details.usageInsights.totalTokens}</p>
                                 </div>
                             </div>

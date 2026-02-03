@@ -1,18 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   ImageFile,
+  MEN_CATEGORIES,
   MEN_CATEGORY_CONFIG,
-  BACKGROUND_OPTIONS,
-  POSE_OPTIONS,
-  EXPRESSION_OPTIONS,
-  VIEW_OPTIONS,
+  MenProductCategory,
+  BACKGROUND_OPTIONS_MEN,
+  POSE_OPTIONS_MEN,
+  EXPRESSION_OPTIONS_MEN,
+  VIEW_OPTIONS_MEN,
   TIME_OPTIONS,
   ASPECT_RATIO_OPTIONS,
   CAMERA_OPTIONS,
   IMAGE_QUALITY_OPTIONS,
+  HAIR_STYLE_OPTIONS_MEN,
+  HairStyleOption,
   ProductUploadType,
   User,
-  Page
+  Page,
+  BOTTOM_TYPE_OPTIONS_MEN,
+  BottomTypeOption
 } from '../types';
 import ImageUploadCard from './ImageUploadCard';
 import TryOnResult from './TryOnResult';
@@ -34,12 +40,21 @@ interface MensTryOnProps {
 }
 
 const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate }) => {
+  const [category, setCategory] = useState<MenProductCategory>('casual');
   const [uploadType, setUploadType] = useState<ProductUploadType>('parts');
   const [fullProductImage, setFullProductImage] = useState<ImageFile | null>(null);
-  const [productImages, setProductImages] = useState<(ImageFile | null)[]>(new Array(MEN_CATEGORY_CONFIG.length).fill(null));
+
+  const [productImages, setProductImages] = useState<Record<MenProductCategory, (ImageFile | null)[]>>({
+    casual: [null, null],
+    traditional: [null, null],
+    streetwear: [null, null, null],
+    formals: [null, null, null],
+  });
 
   const [useCustomModel, setUseCustomModel] = useState<boolean>(false);
   const [customModelImage, setCustomModelImage] = useState<ImageFile | null>(null);
+  const [selectedHairStyle, setSelectedHairStyle] = useState<HairStyleOption>(HAIR_STYLE_OPTIONS_MEN[0]);
+  const [selectedBottomType, setSelectedBottomType] = useState<BottomTypeOption | null>(null);
 
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -56,7 +71,7 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
   // CRITICAL: Check access on mount and when quality changes
   useEffect(() => {
     const validation = validateGenerationAttempt(user, config.quality.id);
-    
+
     if (!validation.allowed) {
       setAccessWarning(validation.error || 'Cannot generate images');
     } else {
@@ -64,28 +79,82 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
     }
   }, [user, config.quality.id, user.paymentStatus, user.planType, user.tokenBalance]);
 
+  // Reset bottom type selection when category or upload type changes
+  useEffect(() => {
+    setSelectedBottomType(null);
+  }, [category, uploadType]);
+
+  const currentCategoryConfig = MEN_CATEGORY_CONFIG[category];
+  const currentProductImages = productImages[category];
+
   const handleProductImageUpload = (index: number) => (imageFile: ImageFile) => {
-    setProductImages(prev => {
-      const newImages = [...prev];
-      newImages[index] = imageFile;
-      return newImages;
-    });
+    setProductImages(prev => ({
+      ...prev,
+      [category]: prev[category].map((img, i) => i === index ? imageFile : img)
+    }));
   };
 
   const handleProductImageRemove = (index: number) => () => {
-    setProductImages(prev => {
-      const newImages = [...prev];
-      newImages[index] = null;
-      return newImages;
-    });
+    setProductImages(prev => ({
+      ...prev,
+      [category]: prev[category].map((img, i) => i === index ? null : img)
+    }));
   };
+
+  // Determine if bottom selector should be shown
+  const shouldShowBottomSelector = useMemo(() => {
+    if (uploadType !== 'parts') return false;
+
+    // Get the bottom slot index from config (any slot with bottom-related keywords)
+    const bottomSlotIndex = currentCategoryConfig.findIndex(
+      (config) => {
+        const partLower = config.part.toLowerCase();
+        return partLower.includes('bottom') ||
+               partLower.includes('trouser') ||
+               partLower.includes('pant') ||
+               partLower.includes('jeans') ||
+               partLower.includes('dhoti') ||
+               partLower.includes('pajama');
+      }
+    );
+
+    // Show selector if bottom slot exists and is empty (regardless of optional/required)
+    return bottomSlotIndex !== -1 && !currentProductImages[bottomSlotIndex];
+  }, [uploadType, currentCategoryConfig, currentProductImages]);
 
   const isGenerationDisabled = useMemo(() => {
     if (isLoading) return true;
     if (useCustomModel && !customModelImage) return true;
     if (uploadType === 'full') return !fullProductImage;
-    return MEN_CATEGORY_CONFIG.some((config, index) => !config.optional && !productImages[index]);
-  }, [isLoading, productImages, uploadType, fullProductImage, useCustomModel, customModelImage]);
+
+    // Find the bottom slot index
+    const bottomSlotIndex = currentCategoryConfig.findIndex(
+      (config) => {
+        const partLower = config.part.toLowerCase();
+        return partLower.includes('bottom') ||
+               partLower.includes('trouser') ||
+               partLower.includes('pant') ||
+               partLower.includes('jeans') ||
+               partLower.includes('dhoti') ||
+               partLower.includes('pajama');
+      }
+    );
+
+    // Check if all required parts are uploaded (excluding bottom if selector is shown)
+    const hasAllRequired = !currentCategoryConfig.some((config, index) => {
+      // If this is the bottom slot and selector is shown, skip this check
+      if (index === bottomSlotIndex && shouldShowBottomSelector) {
+        return false;
+      }
+      // Otherwise, check if required part is missing
+      return !config.optional && !currentProductImages[index];
+    });
+
+    // If bottom selector should be shown and no bottom type selected, disable generation
+    if (shouldShowBottomSelector && !selectedBottomType) return true;
+
+    return !hasAllRequired;
+  }, [isLoading, category, uploadType, fullProductImage, currentProductImages, currentCategoryConfig, useCustomModel, customModelImage, shouldShowBottomSelector, selectedBottomType]);
 
   const handleGenerate = async () => {
     // CRITICAL: Final validation before generation
@@ -97,7 +166,7 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
 
     const requiredImages = uploadType === 'full'
       ? [fullProductImage!.file]
-      : productImages.map(img => img?.file).filter((file): file is File => file !== undefined);
+      : currentProductImages.map(img => img?.file).filter((file): file is File => file !== undefined);
 
     if (requiredImages.length === 0) return;
 
@@ -111,7 +180,7 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
       const response = await generateTryOnImage(
         requiredImages,
         'men',
-        'men',
+        category,
         config.background.prompt,
         config.pose.prompt,
         config.expression.prompt,
@@ -123,12 +192,14 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
         uploadType,
         useCustomModel && customModelImage ? customModelImage.file : undefined,
         undefined,
-        config.previewOptions
+        config.previewOptions,
+        undefined, undefined, undefined, selectedHairStyle,
+        config.fitType, config.bodyType, selectedBottomType
       );
 
       setGenStage(GenerationStage.FINALIZING);
       const imageUrl = `data:image/png;base64,${response.image}`;
-      await saveImageToHistory(imageUrl, "Men's Apparel", response.creditsUsed, useCustomModel && customModelImage ? customModelImage.file : undefined);
+      await saveImageToHistory(imageUrl, `Men's ${MEN_CATEGORIES.find(c => c.id === category)?.name}`, response.creditsUsed, useCustomModel && customModelImage ? customModelImage.file : undefined);
       setGeneratedImage(imageUrl);
 
       // Update credits in real-time
@@ -248,7 +319,71 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
             )}
           </div>
 
-          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Category Selection */}
+          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-50">
+            <h3 className="text-xs font-black text-gray-400 mb-3 text-center uppercase tracking-widest">Select Category</h3>
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4">
+              {MEN_CATEGORIES.map(({ id, name }) => (
+                <button
+                  key={id}
+                  onClick={() => setCategory(id)}
+                  className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${
+                    category === id
+                      ? 'bg-primary text-white shadow-xl'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+
+            {/* Upload Type Toggle */}
+            <div className="flex justify-center gap-4 border-t border-gray-50 pt-4">
+              <button
+                onClick={() => setUploadType('parts')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  uploadType === 'parts'
+                    ? 'bg-secondary text-white border-secondary'
+                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                Upload Components
+              </button>
+              <button
+                onClick={() => setUploadType('full')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  uploadType === 'full'
+                    ? 'bg-secondary text-white border-secondary'
+                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                Full Product Shot
+              </button>
+            </div>
+          </div>
+
+          {/* Hair Style Selection */}
+          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-50">
+            <h3 className="font-semibold text-lg text-gray-700 mb-4 text-center">Hair Style</h3>
+            <div className="flex flex-wrap justify-center gap-2">
+              {HAIR_STYLE_OPTIONS_MEN.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => setSelectedHairStyle(style)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    selectedHairStyle.id === style.id
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {style.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4 hidden">
             <div className="flex flex-col">
               <h3 className="font-bold text-gray-800">Product Upload Mode</h3>
               <p className="text-xs text-gray-500">Upload parts or a single full product photo.</p>
@@ -259,23 +394,78 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {uploadType === 'full' ? (
-              <div className="md:col-span-2">
-                <ImageUploadCard title="Full Product Photo" isOptional={false} onImageUpload={setFullProductImage} onImageRemove={() => setFullProductImage(null)} imageFile={fullProductImage} />
+              <div className="sm:col-span-2 lg:col-span-3">
+                <ImageUploadCard
+                  title={`Full ${MEN_CATEGORIES.find(c => c.id === category)?.name} Photo`}
+                  isOptional={false}
+                  onImageUpload={setFullProductImage}
+                  onImageRemove={() => setFullProductImage(null)}
+                  imageFile={fullProductImage}
+                  dropzoneClassName="h-64"
+                />
               </div>
             ) : (
-              MEN_CATEGORY_CONFIG.map((config, index) => (
-                <ImageUploadCard key={config.part} title={`${config.part} Photo`} isOptional={config.optional} onImageUpload={handleProductImageUpload(index)} onImageRemove={handleProductImageRemove(index)} imageFile={productImages[index]} />
+              currentCategoryConfig.map((config, index) => (
+                <ImageUploadCard
+                  key={`${category}-${config.part}`}
+                  title={`${config.part} Photo`}
+                  isOptional={config.optional}
+                  onImageUpload={handleProductImageUpload(index)}
+                  onImageRemove={handleProductImageRemove(index)}
+                  imageFile={currentProductImages[index]}
+                  dropzoneClassName="h-48"
+                />
               ))
             )}
           </div>
 
+          {/* Bottom Type Selector */}
+          {shouldShowBottomSelector && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-lg font-bold text-gray-900">
+                  No Bottom Uploaded - Select Default Bottom Type
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Since you haven't uploaded a bottom, choose what type of bottom should appear on the model:
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {BOTTOM_TYPE_OPTIONS_MEN.map((bottomType) => (
+                  <button
+                    key={bottomType.id}
+                    onClick={() => setSelectedBottomType(bottomType)}
+                    className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                      selectedBottomType?.id === bottomType.id
+                        ? 'border-blue-600 bg-blue-100 text-blue-900'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'
+                    }`}
+                  >
+                    {bottomType.name}
+                  </button>
+                ))}
+              </div>
+              {selectedBottomType && (
+                <p className="text-xs text-green-600 mt-3 font-medium flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Selected: {selectedBottomType.name}
+                </p>
+              )}
+            </div>
+          )}
+
           <ModelCustomizer
           user={user}
-            poseOptions={POSE_OPTIONS} selectedPose={config.pose} onPoseChange={(p) => updateConfig({ pose: p })}
-            expressionOptions={EXPRESSION_OPTIONS} selectedExpression={config.expression} onExpressionChange={(e) => updateConfig({ expression: e })}
-            viewOptions={VIEW_OPTIONS} selectedView={config.view} onViewChange={(v) => updateConfig({ view: v })}
+            poseOptions={POSE_OPTIONS_MEN} selectedPose={config.pose} onPoseChange={(p) => updateConfig({ pose: p })}
+            expressionOptions={EXPRESSION_OPTIONS_MEN} selectedExpression={config.expression} onExpressionChange={(e) => updateConfig({ expression: e })}
+            viewOptions={VIEW_OPTIONS_MEN} selectedView={config.view} onViewChange={(v) => updateConfig({ view: v })}
             timeOptions={TIME_OPTIONS} selectedTime={config.time} onTimeChange={(t) => updateConfig({ time: t })}
             aspectRatioOptions={ASPECT_RATIO_OPTIONS} selectedAspectRatio={config.aspectRatio} onAspectRatioChange={(a) => updateConfig({ aspectRatio: a })}
             cameraOptions={CAMERA_OPTIONS} selectedCamera={config.camera} onCameraChange={(c) => updateConfig({ camera: c })}
@@ -284,10 +474,10 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
             onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} presets={presets} onSavePreset={savePreset} onLoadPreset={loadPreset} onDeletePreset={deletePreset} onRenamePreset={renamePreset} onClearAllPresets={clearAllPresets}
           />
 
-          <BackgroundSelector options={BACKGROUND_OPTIONS} selectedBackground={config.background} onBackgroundChange={(b) => updateConfig({ background: b })} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
+          <BackgroundSelector options={BACKGROUND_OPTIONS_MEN} selectedBackground={config.background} onBackgroundChange={(b) => updateConfig({ background: b })} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
 
           <div className="mt-8 text-center sticky bottom-6 z-20">
-            <TokenEstimator imageFiles={[...(uploadType === 'full' ? [fullProductImage?.file] : productImages.map(i => i?.file)), customModelImage?.file]} quality={config.quality} />
+            <TokenEstimator imageFiles={[...(uploadType === 'full' ? [fullProductImage?.file] : currentProductImages.map(i => i?.file)), customModelImage?.file]} quality={config.quality} />
             
             {/* CRITICAL: Access Warning Display */}
             {accessWarning && (

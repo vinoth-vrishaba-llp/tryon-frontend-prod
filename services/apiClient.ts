@@ -104,11 +104,26 @@ export const getAuthHeadersForFormData = (): HeadersInit => {
  * Handle API response with enhanced error logging and access control handling
  */
 const handleResponse = async (response: Response) => {
-    // CRITICAL: Handle 401 Unauthorized (session expired)
+    // CRITICAL: Handle 401 Unauthorized (session expired or invalid credentials)
     if (response.status === 401) {
+        const hadToken = !!getToken();
         clearAuth();
-        window.location.reload();
-        throw new Error('Session expired. Please log in again.');
+
+        // Only reload if there was an existing session (session expired)
+        // Don't reload for login failures - let the error be displayed
+        if (hadToken) {
+            window.location.reload();
+            throw new Error('Session expired. Please log in again.');
+        }
+
+        // For login failures, extract and throw the error message
+        let errorData;
+        try {
+            errorData = await response.json();
+        } catch {
+            errorData = { error: 'Invalid email or password' };
+        }
+        throw new Error(errorData.error || 'Invalid email or password');
     }
 
     // CRITICAL: Handle 402 Payment Required (no active plan)

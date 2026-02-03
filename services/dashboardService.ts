@@ -47,3 +47,11 @@ export const getUserDetails = async (userId: string): Promise<any> => {
 export const checkMaintenanceStatus = async (): Promise<{ maintenanceMode: boolean }> => {
     return apiClient.publicGet<{ maintenanceMode: boolean }>('/status/maintenance');
 };
+
+/**
+ * Toggle user active status (admin only)
+ * Used to suspend or activate users
+ */
+export const toggleUserStatus = async (userId: string, isActive: boolean): Promise<{ success: boolean; message: string; user: any }> => {
+    return apiClient.post(`/admin/user/${userId}/toggle-status`, { isActive });
+};

@@ -11,6 +11,7 @@ interface LibraryPageProps {
 interface HistoryItem {
   id: string;
   imageUrl: string;
+  thumbnailUrl?: string;
   creditsUsed: number;
   quality: string;
   section: string;
@@ -35,10 +36,27 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
     type: 'single'
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isModalImageLoading, setIsModalImageLoading] = useState(false);
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  useEffect(() => {
+    // Initialize all images as loading when history changes
+    if (history.length > 0) {
+      setLoadingImages(new Set(history.map(item => item.id)));
+    }
+  }, [history.length]);
+
+  const handleImageLoad = (id: string) => {
+    setLoadingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+  };
 
   const fetchHistory = async () => {
     try {
@@ -132,13 +150,39 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
     }
   };
 
-  const handleDownload = (imageUrl: string, category: string) => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `${category || 'try-on'}-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (imageUrl: string, category: string) => {
+    try {
+      const filename = `${category || 'try-on'}-${Date.now()}.png`;
+      const token = localStorage.getItem('auth_token');
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+      // Use backend proxy to bypass CORS
+      const proxyUrl = `${apiBaseUrl}/download-image?url=${encodeURIComponent(imageUrl)}&filename=${encodeURIComponent(filename)}`;
+
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      window.open(imageUrl, '_blank');
+    }
   };
 
   const availableCategories = useMemo(() => {
@@ -378,14 +422,29 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
                 className={`group relative rounded-xl overflow-hidden shadow-md cursor-pointer bg-gray-100 aspect-square ${
                   selectedIds.has(item.id) ? 'ring-2 ring-primary ring-offset-2' : ''
                 }`}
-                onClick={() => setSelectedImage(item)}
+                onClick={() => {
+                  setIsModalImageLoading(true);
+                  setSelectedImage(item);
+                }}
               >
+                {/* Skeleton loader */}
+                {loadingImages.has(item.id) && (
+                  <div className="absolute inset-0 animate-pulse bg-gray-200 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+                  </div>
+                )}
                 <img
-                  src={item.imageUrl}
+                  src={item.thumbnailUrl || item.imageUrl}
                   alt={item.category || 'Generated image'}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
+                    loadingImages.has(item.id) ? 'opacity-0' : 'opacity-100'
+                  }`}
                   loading="lazy"
+                  decoding="async"
+                  fetchpriority="low"
+                  onLoad={() => handleImageLoad(item.id)}
                   onError={(e) => {
+                    handleImageLoad(item.id);
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12">No Image</text></svg>';
                   }}
                 />
@@ -445,22 +504,28 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
       {/* Image Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2 sm:p-4"
+          onClick={() => {
+            setSelectedImage(null);
+            setIsModalImageLoading(false);
+          }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">{selectedImage.category || 'Virtual Try-On'}</h3>
-                <p className="text-sm text-gray-500">{formatDate(selectedImage.createdAt)}</p>
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100">
+              <div className="min-w-0 flex-1 mr-2">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">{selectedImage.category || 'Virtual Try-On'}</h3>
+                <p className="text-xs sm:text-sm text-gray-500">{formatDate(selectedImage.createdAt)}</p>
               </div>
               <button
-                onClick={() => setSelectedImage(null)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                onClick={() => {
+                  setSelectedImage(null);
+                  setIsModalImageLoading(false);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               >
                 <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -469,28 +534,59 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
             </div>
 
             {/* Modal Image */}
-            <div className="flex-1 overflow-auto p-4 bg-gray-50 flex items-center justify-center">
+            <div className="flex-1 overflow-auto p-2 sm:p-4 bg-gray-50 flex items-center justify-center min-h-0 relative">
+              {/* Loading spinner overlay */}
+              {isModalImageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100/95 backdrop-blur-sm z-20">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent"></div>
+                      <div className="absolute inset-0 animate-pulse rounded-full h-16 w-16 border-4 border-primary/20"></div>
+                    </div>
+                    <p className="text-sm text-gray-700 font-semibold">Loading high quality image...</p>
+                  </div>
+                </div>
+              )}
+              {/* Show thumbnail as placeholder while full image loads */}
+              {isModalImageLoading && selectedImage.thumbnailUrl && (
+                <img
+                  src={selectedImage.thumbnailUrl}
+                  alt={selectedImage.category || 'Generated image'}
+                  className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg shadow-lg blur-sm opacity-40"
+                  decoding="async"
+                  loading="eager"
+                />
+              )}
+              {/* Full quality image */}
               <img
                 src={selectedImage.imageUrl}
                 alt={selectedImage.category || 'Generated image'}
-                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
+                className={`max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg shadow-lg transition-opacity duration-500 ${
+                  isModalImageLoading ? 'absolute opacity-0' : 'opacity-100'
+                }`}
+                decoding="async"
+                fetchpriority="high"
+                onLoad={() => setIsModalImageLoading(false)}
+                onError={() => setIsModalImageLoading(false)}
               />
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="p-3 sm:p-4 border-t border-gray-100">
+              {/* Info row */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className={`text-xs font-bold px-3 py-1 rounded-full ${getQualityBadgeColor(selectedImage.quality)}`}>
                   {selectedImage.quality || 'Standard'} Quality
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs sm:text-sm text-gray-500">
                   {selectedImage.creditsUsed} credits used
                 </span>
               </div>
-              <div className="flex gap-2">
+              {/* Buttons row */}
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={() => handleDownload(selectedImage.imageUrl, selectedImage.category)}
-                  className="flex items-center px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-indigo-800 transition-all"
+                  className="flex items-center justify-center flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-indigo-800 transition-all"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -499,7 +595,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
                 </button>
                 <button
                   onClick={() => handleDeleteFromModal(selectedImage.id)}
-                  className="flex items-center px-4 py-2 bg-red-50 text-red-600 rounded-lg font-bold hover:bg-red-100 transition-all"
+                  className="flex items-center justify-center flex-1 sm:flex-none px-4 py-2.5 bg-red-50 text-red-600 rounded-lg font-bold hover:bg-red-100 transition-all"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

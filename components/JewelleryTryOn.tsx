@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   ImageFile, JewelleryProductCategory, JEWELLERY_CATEGORIES,
-  BACKGROUND_OPTIONS, ProductUploadType, POSE_OPTIONS, EXPRESSION_OPTIONS,
-  VIEW_OPTIONS, TIME_OPTIONS, ASPECT_RATIO_OPTIONS, CAMERA_OPTIONS,
+  BACKGROUND_OPTIONS_JEWELLERY, ProductUploadType, POSE_OPTIONS_JEWELLERY, EXPRESSION_OPTIONS_JEWELLERY,
+  VIEW_OPTIONS_JEWELLERY, TIME_OPTIONS, ASPECT_RATIO_OPTIONS, CAMERA_OPTIONS,
   IMAGE_QUALITY_OPTIONS, SKIN_TONE_OPTIONS, ATTIRE_OPTIONS, SkinToneOption, AttireOption,
   User, Page
 } from '../types';
@@ -61,8 +61,8 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
   useEffect(() => {
     updateConfig({
       camera: CAMERA_OPTIONS.find(c => c.id === 'macro') || CAMERA_OPTIONS[1],
-      view: VIEW_OPTIONS.find(v => v.id === 'close-up') || VIEW_OPTIONS[0],
-      background: BACKGROUND_OPTIONS.find(b => b.id === 'temple-corridor') || BACKGROUND_OPTIONS[0]
+      view: VIEW_OPTIONS_JEWELLERY.find(v => v.id === 'close-up') || VIEW_OPTIONS_JEWELLERY[0],
+      background: BACKGROUND_OPTIONS_JEWELLERY.find(b => b.id === 'temple-corridor') || BACKGROUND_OPTIONS_JEWELLERY[0]
     });
   }, []);
 
@@ -300,9 +300,9 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
           {/* Studio Customization */}
           <ModelCustomizer
           user={user}
-            poseOptions={POSE_OPTIONS} selectedPose={config.pose} onPoseChange={p => updateConfig({ pose: p })}
-            expressionOptions={EXPRESSION_OPTIONS} selectedExpression={config.expression} onExpressionChange={e => updateConfig({ expression: e })}
-            viewOptions={VIEW_OPTIONS} selectedView={config.view} onViewChange={v => updateConfig({ view: v })}
+            poseOptions={POSE_OPTIONS_JEWELLERY} selectedPose={config.pose} onPoseChange={p => updateConfig({ pose: p })}
+            expressionOptions={EXPRESSION_OPTIONS_JEWELLERY} selectedExpression={config.expression} onExpressionChange={e => updateConfig({ expression: e })}
+            viewOptions={VIEW_OPTIONS_JEWELLERY} selectedView={config.view} onViewChange={v => updateConfig({ view: v })}
             timeOptions={TIME_OPTIONS} selectedTime={config.time} onTimeChange={t => updateConfig({ time: t })}
             aspectRatioOptions={ASPECT_RATIO_OPTIONS} selectedAspectRatio={config.aspectRatio} onAspectRatioChange={a => updateConfig({ aspectRatio: a })}
             cameraOptions={CAMERA_OPTIONS} selectedCamera={config.camera} onCameraChange={c => updateConfig({ camera: c })}
@@ -314,7 +314,7 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
           />
 
           <BackgroundSelector
-            options={BACKGROUND_OPTIONS}
+            options={BACKGROUND_OPTIONS_JEWELLERY}
             selectedBackground={config.background}
             onBackgroundChange={(b) => updateConfig({ background: b })}
             onUndo={undo}

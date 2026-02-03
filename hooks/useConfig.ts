@@ -1,10 +1,11 @@
 
 import { useReducer, useCallback, useEffect } from 'react';
-import { 
+import {
     ConfigState, Preset,
-    BACKGROUND_OPTIONS, POSE_OPTIONS, EXPRESSION_OPTIONS, 
-    VIEW_OPTIONS, TIME_OPTIONS, ASPECT_RATIO_OPTIONS, 
-    CAMERA_OPTIONS, IMAGE_QUALITY_OPTIONS 
+    BACKGROUND_OPTIONS, POSE_OPTIONS, EXPRESSION_OPTIONS,
+    VIEW_OPTIONS, TIME_OPTIONS, ASPECT_RATIO_OPTIONS,
+    CAMERA_OPTIONS, IMAGE_QUALITY_OPTIONS,
+    HAIR_STYLE_OPTIONS_WOMEN, FIT_TYPE_OPTIONS, BODY_TYPE_OPTIONS_WOMEN
 } from '../types';
 
 const DEFAULT_CONFIG: ConfigState = {
@@ -16,6 +17,9 @@ const DEFAULT_CONFIG: ConfigState = {
     aspectRatio: ASPECT_RATIO_OPTIONS[0],
     camera: CAMERA_OPTIONS[0],
     quality: IMAGE_QUALITY_OPTIONS[0],
+    hairStyle: HAIR_STYLE_OPTIONS_WOMEN[0],
+    fitType: FIT_TYPE_OPTIONS[1], // Default to 'Regular'
+    bodyType: BODY_TYPE_OPTIONS_WOMEN[0], // Default to 'Slim'
     previewOptions: {
         showOutfitDetails: false,
         highlightFabricTexture: false

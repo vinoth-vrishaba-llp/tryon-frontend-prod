@@ -1,16 +1,37 @@
 
 import React, { useState } from 'react';
+import FeedbackModal from './FeedbackModal';
+import { Section } from '../types';
 
 interface TryOnResultProps {
   imageUrl: string;
   originalImage?: string; // URL for the comparison image (custom model)
+  productImages?: string[]; // URLs for uploaded product images
+  section: Section;
+  category: string;
+  qualityUsed: string;
+  historyId?: string;
   onReset: () => void;
   onRetry: () => void;
   isLoading: boolean;
 }
 
-const TryOnResult: React.FC<TryOnResultProps> = ({ imageUrl, originalImage, onReset, onRetry, isLoading }) => {
-  const [showComparison, setShowComparison] = useState(false);
+type ViewMode = 'single' | 'model-comparison' | 'product-comparison';
+
+const TryOnResult: React.FC<TryOnResultProps> = ({
+  imageUrl,
+  originalImage,
+  productImages,
+  section,
+  category,
+  qualityUsed,
+  historyId,
+  onReset,
+  onRetry,
+  isLoading
+}) => {
+  const [viewMode, setViewMode] = useState<ViewMode>('single');
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const downloadImage = () => {
     const link = document.createElement('a');
@@ -47,53 +68,94 @@ const TryOnResult: React.FC<TryOnResultProps> = ({ imageUrl, originalImage, onRe
       <h2 className="text-3xl font-bold text-primary mb-4">Your Virtual Try-On Result!</h2>
       
       {/* View Toggle */}
-      {originalImage && (
+      {(originalImage || (productImages && productImages.length > 0)) && (
           <div className="flex justify-center mb-4">
               <div className="bg-gray-100 p-1 rounded-lg flex gap-1">
                   <button
-                      onClick={() => setShowComparison(false)}
-                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${!showComparison ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                      onClick={() => setViewMode('single')}
+                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'single' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
                   >
                       Single View
                   </button>
-                  <button
-                      onClick={() => setShowComparison(true)}
-                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${showComparison ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                      Split Comparison
-                  </button>
+                  {originalImage && (
+                      <button
+                          onClick={() => setViewMode('model-comparison')}
+                          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'model-comparison' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                      >
+                          Model Comparison
+                      </button>
+                  )}
+                  {productImages && productImages.length > 0 && (
+                      <button
+                          onClick={() => setViewMode('product-comparison')}
+                          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'product-comparison' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                      >
+                          Product Check
+                      </button>
+                  )}
               </div>
           </div>
       )}
 
-      <div className={`mx-auto bg-white rounded-lg shadow-xl overflow-hidden p-4 relative transition-all duration-300 ${showComparison ? 'max-w-5xl' : 'max-w-2xl'}`}>
+      <div className={`mx-auto bg-white rounded-lg shadow-xl overflow-hidden p-4 relative transition-all duration-300 ${viewMode !== 'single' ? 'max-w-6xl' : 'max-w-2xl'}`}>
          {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center z-10 rounded-lg">
              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
             <p className="text-gray-600 font-medium animate-pulse">Refining image...</p>
           </div>
         )}
-        
-        {showComparison && originalImage ? (
+
+        {viewMode === 'model-comparison' && originalImage ? (
             <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                    <span className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">Original</span>
+                    <span className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">Original Model</span>
                     <img src={originalImage} alt="Original" className="w-full h-auto object-contain rounded-md" />
                 </div>
                 <div className="relative">
                     <span className="absolute top-2 right-2 bg-accent/80 text-white text-xs px-2 py-1 rounded">Generated</span>
-                    <img 
-                        src={imageUrl} 
-                        alt="Generated" 
-                        className="w-full h-auto object-contain rounded-md" 
+                    <img
+                        src={imageUrl}
+                        alt="Generated"
+                        className="w-full h-auto object-contain rounded-md"
                     />
                 </div>
             </div>
+        ) : viewMode === 'product-comparison' && productImages && productImages.length > 0 ? (
+            <div className={`grid gap-4 ${productImages.length === 1 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {/* Product Images */}
+                <div className={`${productImages.length > 1 ? 'col-span-1' : 'col-span-1'} space-y-3`}>
+                    <h3 className="text-sm font-bold text-gray-700 mb-2 text-center">Uploaded Products</h3>
+                    {productImages.map((imgUrl, idx) => (
+                        <div key={idx} className="relative bg-gray-50 rounded-md p-2">
+                            <span className="absolute top-3 left-3 bg-blue-500/80 text-white text-xs px-2 py-0.5 rounded font-medium">
+                                {productImages.length === 1 ? 'Product' : `Part ${idx + 1}`}
+                            </span>
+                            <img
+                                src={imgUrl}
+                                alt={`Product ${idx + 1}`}
+                                className="w-full h-auto object-contain rounded-md"
+                            />
+                        </div>
+                    ))}
+                </div>
+                {/* Generated Image */}
+                <div className={`${productImages.length > 1 ? 'col-span-2' : 'col-span-1'} relative`}>
+                    <h3 className="text-sm font-bold text-gray-700 mb-2 text-center">Generated Result</h3>
+                    <div className="relative bg-gray-50 rounded-md p-2">
+                        <span className="absolute top-3 right-3 bg-accent/80 text-white text-xs px-2 py-0.5 rounded font-medium">Generated</span>
+                        <img
+                            src={imageUrl}
+                            alt="Generated"
+                            className="w-full h-auto object-contain rounded-md"
+                        />
+                    </div>
+                </div>
+            </div>
         ) : (
-            <img 
-                src={imageUrl} 
-                alt="Generated try-on" 
-                className={`w-full h-auto object-contain rounded-md transition-all duration-500`} 
+            <img
+                src={imageUrl}
+                alt="Generated try-on"
+                className={`w-full h-auto object-contain rounded-md transition-all duration-500`}
             />
         )}
       </div>
@@ -130,6 +192,16 @@ const TryOnResult: React.FC<TryOnResultProps> = ({ imageUrl, originalImage, onRe
           {isLoading ? 'Retrying...' : 'Retry Generation'}
         </button>
         <button
+          onClick={() => setShowFeedbackModal(true)}
+          disabled={isLoading}
+          className="flex items-center justify-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          Report Issue
+        </button>
+        <button
           onClick={onReset}
           disabled={isLoading}
           className="flex items-center justify-center px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-colors duration-300 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -140,6 +212,18 @@ const TryOnResult: React.FC<TryOnResultProps> = ({ imageUrl, originalImage, onRe
           Back to Edit
         </button>
       </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        generatedImageUrl={imageUrl}
+        productImageUrls={productImages}
+        section={section}
+        category={category}
+        qualityUsed={qualityUsed}
+        historyId={historyId}
+      />
     </div>
   );
 };

@@ -7,16 +7,21 @@ import {
   KidsGender,
   KidsAgeGroup,
   ProductUploadType,
-  BACKGROUND_OPTIONS,
-  POSE_OPTIONS,
-  EXPRESSION_OPTIONS,
-  VIEW_OPTIONS,
+  BACKGROUND_OPTIONS_KIDS,
+  POSE_OPTIONS_KIDS,
+  EXPRESSION_OPTIONS_KIDS,
+  VIEW_OPTIONS_KIDS,
   TIME_OPTIONS,
   ASPECT_RATIO_OPTIONS,
   CAMERA_OPTIONS,
   IMAGE_QUALITY_OPTIONS,
+  HAIR_STYLE_OPTIONS_KIDS_BOY,
+  HAIR_STYLE_OPTIONS_KIDS_GIRL,
+  HairStyleOption,
   User,
-  Page
+  Page,
+  BOTTOM_TYPE_OPTIONS_KIDS,
+  BottomTypeOption
 } from '../types';
 import ImageUploadCard from './ImageUploadCard';
 import TryOnResult from './TryOnResult';
@@ -45,6 +50,18 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
   const [fullDressImage, setFullDressImage] = useState<ImageFile | null>(null);
   const [useCustomModel, setUseCustomModel] = useState<boolean>(false);
   const [customModelImage, setCustomModelImage] = useState<ImageFile | null>(null);
+  const [selectedHairStyle, setSelectedHairStyle] = useState<HairStyleOption>(HAIR_STYLE_OPTIONS_KIDS_BOY[0]);
+  const [selectedBottomType, setSelectedBottomType] = useState<BottomTypeOption | null>(null);
+
+  // Get hair style options based on gender
+  const hairStyleOptions = gender === 'boy' ? HAIR_STYLE_OPTIONS_KIDS_BOY : HAIR_STYLE_OPTIONS_KIDS_GIRL;
+
+  // Reset hair style when gender changes
+  const handleGenderChange = (newGender: KidsGender) => {
+    setGender(newGender);
+    const newOptions = newGender === 'boy' ? HAIR_STYLE_OPTIONS_KIDS_BOY : HAIR_STYLE_OPTIONS_KIDS_GIRL;
+    setSelectedHairStyle(newOptions[0]);
+  };
 
   const [productImages, setProductImages] = useState<Record<KidsProductCategory, (ImageFile | null)[]>>({
     western: new Array(KIDS_CATEGORY_CONFIG.western.length).fill(null),
@@ -66,13 +83,18 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
   // CRITICAL: Check access on mount and when quality changes
   useEffect(() => {
     const validation = validateGenerationAttempt(user, config.quality.id);
-    
+
     if (!validation.allowed) {
       setAccessWarning(validation.error || 'Cannot generate images');
     } else {
       setAccessWarning(null);
     }
   }, [user, config.quality.id, user.paymentStatus, user.planType, user.tokenBalance]);
+
+  // Reset bottom type selection when category or upload type changes
+  useEffect(() => {
+    setSelectedBottomType(null);
+  }, [category, uploadType]);
 
   const currentCategoryConfig = KIDS_CATEGORY_CONFIG[category];
   const currentProductImages = productImages[category];
@@ -91,12 +113,62 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
     }));
   }, [category]);
 
+  // Determine if bottom selector should be shown
+  const shouldShowBottomSelector = useMemo(() => {
+    if (uploadType !== 'parts') return false;
+
+    // Get the bottom slot index from config (any slot with bottom-related keywords)
+    const bottomSlotIndex = currentCategoryConfig.findIndex(
+      (config) => {
+        const partLower = config.part.toLowerCase();
+        return partLower.includes('bottom') ||
+               partLower.includes('trouser') ||
+               partLower.includes('pant') ||
+               partLower.includes('jeans') ||
+               partLower.includes('skirt') ||
+               partLower.includes('legging') ||
+               partLower.includes('shorts');
+      }
+    );
+
+    // Show selector if bottom slot exists and is empty (regardless of optional/required)
+    return bottomSlotIndex !== -1 && !currentProductImages[bottomSlotIndex];
+  }, [uploadType, currentCategoryConfig, currentProductImages]);
+
   const isGenerationDisabled = useMemo(() => {
     if (isLoading) return true;
     if (useCustomModel && !customModelImage) return true;
     if (uploadType === 'full') return !fullDressImage;
-    return currentCategoryConfig.some((config, index) => !config.optional && !currentProductImages[index]);
-  }, [isLoading, uploadType, fullDressImage, currentCategoryConfig, currentProductImages, useCustomModel, customModelImage]);
+
+    // Find the bottom slot index
+    const bottomSlotIndex = currentCategoryConfig.findIndex(
+      (config) => {
+        const partLower = config.part.toLowerCase();
+        return partLower.includes('bottom') ||
+               partLower.includes('trouser') ||
+               partLower.includes('pant') ||
+               partLower.includes('jeans') ||
+               partLower.includes('skirt') ||
+               partLower.includes('legging') ||
+               partLower.includes('shorts');
+      }
+    );
+
+    // Check if all required parts are uploaded (excluding bottom if selector is shown)
+    const hasAllRequired = !currentCategoryConfig.some((config, index) => {
+      // If this is the bottom slot and selector is shown, skip this check
+      if (index === bottomSlotIndex && shouldShowBottomSelector) {
+        return false;
+      }
+      // Otherwise, check if required part is missing
+      return !config.optional && !currentProductImages[index];
+    });
+
+    // If bottom selector should be shown and no bottom type selected, disable generation
+    if (shouldShowBottomSelector && !selectedBottomType) return true;
+
+    return !hasAllRequired;
+  }, [isLoading, uploadType, fullDressImage, currentCategoryConfig, currentProductImages, useCustomModel, customModelImage, shouldShowBottomSelector, selectedBottomType]);
 
   const handleGenerate = async () => {
     // CRITICAL: Final validation before generation
@@ -127,7 +199,9 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
         config.camera.prompt, config.quality.id, uploadType,
         useCustomModel && customModelImage ? customModelImage.file : undefined,
         { gender, ageGroup },
-        config.previewOptions
+        config.previewOptions,
+        undefined, undefined, undefined, selectedHairStyle,
+        undefined, undefined, selectedBottomType
       );
 
       setGenStage(GenerationStage.FINALIZING);
@@ -275,17 +349,37 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
               <h3 className="font-semibold text-xs text-gray-400 mb-2 uppercase tracking-widest">Gender</h3>
               <div className="flex gap-2">
                 {['boy', 'girl'].map((g) => (
-                  <button key={g} onClick={() => setGender(g as KidsGender)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${gender === g ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{g.toUpperCase()}</button>
+                  <button key={g} onClick={() => handleGenderChange(g as KidsGender)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${gender === g ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{g.toUpperCase()}</button>
                 ))}
               </div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-md">
               <h3 className="font-semibold text-xs text-gray-400 mb-2 uppercase tracking-widest">Age</h3>
               <div className="flex gap-2">
-                {['7-9', '10-14'].map((a) => (
+                {['2-3', '5', '7-9', '10-14'].map((a) => (
                   <button key={a} onClick={() => setAgeGroup(a as KidsAgeGroup)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${ageGroup === a ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{a} YRS</button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Hair Style Selection */}
+          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-50 max-w-5xl mx-auto mb-6">
+            <h3 className="font-semibold text-lg text-gray-700 mb-4 text-center">Hair Style</h3>
+            <div className="flex flex-wrap justify-center gap-2">
+              {hairStyleOptions.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => setSelectedHairStyle(style)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    selectedHairStyle.id === style.id
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {style.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -301,12 +395,52 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
             )}
           </div>
 
+          {/* Bottom Type Selector */}
+          {shouldShowBottomSelector && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 max-w-5xl mx-auto">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-lg font-bold text-gray-900">
+                  No Bottom Uploaded - Select Default Bottom Type
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Since you haven't uploaded a bottom, choose what type of bottom should appear on the model:
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {BOTTOM_TYPE_OPTIONS_KIDS.map((bottomType) => (
+                  <button
+                    key={bottomType.id}
+                    onClick={() => setSelectedBottomType(bottomType)}
+                    className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                      selectedBottomType?.id === bottomType.id
+                        ? 'border-blue-600 bg-blue-100 text-blue-900'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'
+                    }`}
+                  >
+                    {bottomType.name}
+                  </button>
+                ))}
+              </div>
+              {selectedBottomType && (
+                <p className="text-xs text-green-600 mt-3 font-medium flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Selected: {selectedBottomType.name}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="mt-8 max-w-5xl mx-auto">
             <ModelCustomizer
             user={user}
-              poseOptions={POSE_OPTIONS} selectedPose={config.pose} onPoseChange={(p) => updateConfig({ pose: p })}
-              expressionOptions={EXPRESSION_OPTIONS} selectedExpression={config.expression} onExpressionChange={(e) => updateConfig({ expression: e })}
-              viewOptions={VIEW_OPTIONS} selectedView={config.view} onViewChange={(v) => updateConfig({ view: v })}
+              poseOptions={POSE_OPTIONS_KIDS} selectedPose={config.pose} onPoseChange={(p) => updateConfig({ pose: p })}
+              expressionOptions={EXPRESSION_OPTIONS_KIDS} selectedExpression={config.expression} onExpressionChange={(e) => updateConfig({ expression: e })}
+              viewOptions={VIEW_OPTIONS_KIDS} selectedView={config.view} onViewChange={(v) => updateConfig({ view: v })}
               timeOptions={TIME_OPTIONS} selectedTime={config.time} onTimeChange={(t) => updateConfig({ time: t })}
               aspectRatioOptions={ASPECT_RATIO_OPTIONS} selectedAspectRatio={config.aspectRatio} onAspectRatioChange={(a) => updateConfig({ aspectRatio: a })}
               cameraOptions={CAMERA_OPTIONS} selectedCamera={config.camera} onCameraChange={(c) => updateConfig({ camera: c })}
@@ -317,7 +451,7 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
           </div>
 
           <div className="mt-8 max-w-5xl mx-auto">
-            <BackgroundSelector options={BACKGROUND_OPTIONS} selectedBackground={config.background} onBackgroundChange={(b) => updateConfig({ background: b })} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
+            <BackgroundSelector options={BACKGROUND_OPTIONS_KIDS} selectedBackground={config.background} onBackgroundChange={(b) => updateConfig({ background: b })} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
           </div>
 
           <div className="mt-8 text-center sticky bottom-8 z-20">

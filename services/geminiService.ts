@@ -9,7 +9,11 @@ import {
     PreviewOptionsState,
     SareeAccessoriesState,
     SkinToneOption,
-    AttireOption
+    AttireOption,
+    HairStyleOption,
+    FitTypeOption,
+    BodyTypeOption,
+    BottomTypeOption
 } from "../types";
 import { getAuthHeadersForFormData } from "./apiClient";
 import { encryptData } from "./encryption";
@@ -47,7 +51,12 @@ export const generateTryOnImage = async (
     previewOptions?: PreviewOptionsState,
     sareeAccessories?: SareeAccessoriesState,
     skinTone?: SkinToneOption,
-    attire?: AttireOption
+    attire?: AttireOption,
+    hairStyle?: HairStyleOption,
+    fitType?: FitTypeOption,
+    bodyType?: BodyTypeOption,
+    bottomType?: BottomTypeOption,
+    abortSignal?: AbortSignal
 ): Promise<TryOnGenerationResponse> => {
     const formData = new FormData();
 
@@ -94,12 +103,17 @@ export const generateTryOnImage = async (
     if (sareeAccessories) formData.append('sareeAccessories', JSON.stringify(sareeAccessories));
     if (skinTone) formData.append('skinTone', JSON.stringify(skinTone));
     if (attire) formData.append('attire', JSON.stringify(attire));
+    if (hairStyle) formData.append('hairStyle', JSON.stringify(hairStyle));
+    if (fitType) formData.append('fitType', JSON.stringify(fitType));
+    if (bodyType) formData.append('bodyType', JSON.stringify(bodyType));
+    if (bottomType) formData.append('bottomType', JSON.stringify(bottomType));
 
     try {
         const response = await fetch(`${BACKEND_URL}/generate-tryon`, {
             method: 'POST',
             headers: getAuthHeadersForFormData(),
             body: formData,
+            signal: abortSignal,
         });
 
         if (response.status === 401) {
@@ -136,6 +150,12 @@ export const generateTryOnImage = async (
             creditsRemaining: data.creditsRemaining
         };
     } catch (error: any) {
+        // Handle abort error specifically
+        if (error.name === 'AbortError') {
+            const abortError = new Error('GENERATION_CANCELLED');
+            (abortError as any).cancelled = true;
+            throw abortError;
+        }
         console.error('Generation Error:', error);
         throw error;
     }

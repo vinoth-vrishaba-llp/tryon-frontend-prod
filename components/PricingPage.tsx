@@ -111,12 +111,19 @@ const PricingPage: React.FC<PricingPageProps> = ({ user, onPlanSelected, onBack 
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {plans.map((plan) => (
+                {plans.map((plan) => {
+                    const isCurrentPlan = user.planType === plan.name;
+                    return (
                     <div
                         key={plan.name}
                         className={`relative rounded-3xl p-8 shadow-xl transition-all hover:scale-[1.02] ${plan.color}`}
                     >
-                        {plan.popular && (
+                        {isCurrentPlan && (
+                            <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+                                Current Plan
+                            </span>
+                        )}
+                        {plan.popular && !isCurrentPlan && (
                             <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
                                 Most Popular
                             </span>
@@ -159,13 +166,22 @@ const PricingPage: React.FC<PricingPageProps> = ({ user, onPlanSelected, onBack 
 
                         <button
                             onClick={() => handleSelectPlan(plan.name)}
-                            disabled={isLoading}
-                            className={`w-full py-4 rounded-2xl font-black transition-all disabled:opacity-50 ${plan.buttonColor}`}
+                            disabled={isLoading || isCurrentPlan}
+                            className={`w-full py-4 rounded-2xl font-black transition-all disabled:opacity-50 ${
+                                isCurrentPlan
+                                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                                    : plan.buttonColor
+                            }`}
                         >
-                            {isLoading ? 'Processing...' : `Get Started with ${plan.name}`}
+                            {isCurrentPlan
+                                ? 'Current Plan'
+                                : isLoading
+                                    ? 'Processing...'
+                                    : `Get Started with ${plan.name}`}
                         </button>
                     </div>
-                ))}
+                    );
+                })}
             </div>
 
             <div className="mt-20 bg-white rounded-3xl p-10 shadow-sm border border-gray-100">

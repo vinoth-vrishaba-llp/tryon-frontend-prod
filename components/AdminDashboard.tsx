@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { User, AdminDashboardData } from '../types';
-import { getAdminDashboardData, toggleMaintenanceMode, sendBroadcastEmail } from '../services/dashboardService';
+import { User, AdminDashboardData, Report } from '../types';
+import { getAdminDashboardData, toggleMaintenanceMode, sendBroadcastEmail, toggleUserStatus } from '../services/dashboardService';
+import { getUnreadReportsCount, markAllReportsAsRead } from '../services/reportService';
 import AdminManualCreditsModal from './AdminManualCreditsModal';
+import ReportsList from './admin/ReportsList';
+import ReportDetails from './admin/ReportDetails';
+import RecommendedPresetsManager from './admin/RecommendedPresetsManager';
+
+type AdminUser = User & { status: 'Active' | 'Blocked'; signupDate: string };
 
 interface AdminDashboardProps {
     user: User;
@@ -25,6 +31,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
     // Manual Credits Modal State
     const [isManualCreditsModalOpen, setIsManualCreditsModalOpen] = useState(false);
 
+    // Suspend User Modal State
+    const [suspendModal, setSuspendModal] = useState<{
+        isOpen: boolean;
+        user: AdminUser | null;
+        action: 'suspend' | 'activate';
+    }>({ isOpen: false, user: null, action: 'suspend' });
+    const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+
+    // Tab State
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'recommended-presets'>('dashboard');
+    const [unreadReportsCount, setUnreadReportsCount] = useState(0);
+    const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+    const [reportsRefreshTrigger, setReportsRefreshTrigger] = useState(0);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -38,6 +58,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
             }
         };
         fetchData();
+    }, []);
+
+    // Fetch unread reports count
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            try {
+                const count = await getUnreadReportsCount();
+                setUnreadReportsCount(count);
+            } catch (err) {
+                console.error('Failed to fetch unread reports count:', err);
+            }
+        };
+        fetchUnreadCount();
+
+        // Poll every 30 seconds for new reports
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleToggleMaintenance = async () => {
@@ -78,6 +115,74 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
         }
     };
 
+    const openSuspendModal = (user: AdminUser) => {
+        const action = user.status === 'Active' ? 'suspend' : 'activate';
+        setSuspendModal({ isOpen: true, user, action });
+    };
+
+    const closeSuspendModal = () => {
+        setSuspendModal({ isOpen: false, user: null, action: 'suspend' });
+    };
+
+    const handleToggleUserStatus = async () => {
+        if (!suspendModal.user) return;
+
+        setIsTogglingStatus(true);
+        try {
+            const newIsActive = suspendModal.action === 'activate';
+            await toggleUserStatus(suspendModal.user.id, newIsActive);
+
+            // Update local state
+            setData(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    users: prev.users.map(u =>
+                        u.id === suspendModal.user!.id
+                            ? { ...u, status: newIsActive ? 'Active' : 'Blocked' as const }
+                            : u
+                    )
+                };
+            });
+
+            closeSuspendModal();
+        } catch (err: any) {
+            alert(`Failed to ${suspendModal.action} user: ${err.message}`);
+        } finally {
+            setIsTogglingStatus(false);
+        }
+    };
+
+    const handleTabChange = async (tab: 'dashboard' | 'reports' | 'recommended-presets') => {
+        setActiveTab(tab);
+
+        // Mark all reports as read when opening Reports tab
+        if (tab === 'reports' && unreadReportsCount > 0) {
+            try {
+                await markAllReportsAsRead();
+                setUnreadReportsCount(0);
+            } catch (err) {
+                console.error('Failed to mark reports as read:', err);
+            }
+        }
+    };
+
+    const handleReportUpdate = (updatedReport: Report) => {
+        setReportsRefreshTrigger(prev => prev + 1);
+        setSelectedReport(updatedReport);
+    };
+
+    const formatExpiryDate = (dateStr?: string) => {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '—';
+        return date.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
     if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading Admin Dashboard...</div>;
     if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
     if (!data) return null;
@@ -97,8 +202,52 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                 </button>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            {/* Tab Navigation */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
+                <div className="flex border-b border-gray-200">
+                    <button
+                        onClick={() => handleTabChange('dashboard')}
+                        className={`flex-1 px-6 py-4 font-semibold transition-all ${
+                            activeTab === 'dashboard'
+                                ? 'text-primary border-b-2 border-primary bg-blue-50'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                    >
+                        Dashboard
+                    </button>
+                    <button
+                        onClick={() => handleTabChange('reports')}
+                        className={`flex-1 px-6 py-4 font-semibold transition-all relative ${
+                            activeTab === 'reports'
+                                ? 'text-primary border-b-2 border-primary bg-blue-50'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                    >
+                        Reports
+                        {unreadReportsCount > 0 && (
+                            <span className="absolute top-2 right-4 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                {unreadReportsCount}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => handleTabChange('recommended-presets')}
+                        className={`flex-1 px-6 py-4 font-semibold transition-all ${
+                            activeTab === 'recommended-presets'
+                                ? 'text-primary border-b-2 border-primary bg-blue-50'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                    >
+                        Recommended Presets
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'dashboard' ? (
+                <>
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                     <p className="text-xs font-bold text-gray-500 uppercase mb-1">Total Users</p>
                     <p className="text-2xl font-black text-gray-900">{data.kpis.totalUsers}</p>
@@ -282,6 +431,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                                 <th className="px-6 py-4">Plan</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Signup Date</th>
+                                <th className="px-6 py-4">Expiry Date</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -298,12 +448,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="flex items-center text-[10px] font-bold text-green-600">
-                                            <span className="w-1.5 h-1.5 bg-green-600 rounded-full mr-1.5"></span>
-                                            ACTIVE
-                                        </span>
+                                        {u.status === 'Active' ? (
+                                            <span className="flex items-center text-[10px] font-bold text-green-600">
+                                                <span className="w-1.5 h-1.5 bg-green-600 rounded-full mr-1.5"></span>
+                                                ACTIVE
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center text-[10px] font-bold text-red-600">
+                                                <span className="w-1.5 h-1.5 bg-red-600 rounded-full mr-1.5"></span>
+                                                SUSPENDED
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 text-xs text-gray-600">{u.signupDate}</td>
+                                    <td className="px-6 py-4 text-xs text-gray-600">
+                                        {u.planType === 'Free' ? (
+                                            <span className="text-gray-400">—</span>
+                                        ) : (
+                                            formatExpiryDate(u.subscriptionEnd)
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 text-right">
                                         <button
                                             onClick={() => onViewUser(u.id)}
@@ -311,7 +475,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                                         >
                                             View
                                         </button>
-                                        <button className="text-red-600 font-bold text-xs hover:underline">Suspend</button>
+                                        <button
+                                            onClick={() => openSuspendModal(u)}
+                                            className={`font-bold text-xs hover:underline ${
+                                                u.status === 'Active' ? 'text-red-600' : 'text-green-600'
+                                            }`}
+                                        >
+                                            {u.status === 'Active' ? 'Suspend' : 'Activate'}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -359,6 +530,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                     </div>
                 </div>
             </div>
+                </>
+            ) : activeTab === 'reports' ? (
+                <div className="space-y-6">
+                    <ReportsList
+                        onSelectReport={setSelectedReport}
+                        refreshTrigger={reportsRefreshTrigger}
+                    />
+                </div>
+            ) : activeTab === 'recommended-presets' ? (
+                <RecommendedPresetsManager />
+            ) : null}
+
+            {/* Report Details Modal */}
+            {selectedReport && (
+                <ReportDetails
+                    report={selectedReport}
+                    onClose={() => setSelectedReport(null)}
+                    onUpdate={handleReportUpdate}
+                />
+            )}
 
             {/* Admin Manual Credits Modal */}
             <AdminManualCreditsModal
@@ -367,6 +558,89 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                 users={data.users}
                 onCreditsAdded={handleManualCreditsAdded}
             />
+
+            {/* Suspend/Activate User Confirmation Modal */}
+            {suspendModal.isOpen && suspendModal.user && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={closeSuspendModal}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="p-6 text-center">
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                                suspendModal.action === 'suspend' ? 'bg-red-100' : 'bg-green-100'
+                            }`}>
+                                {suspendModal.action === 'suspend' ? (
+                                    <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                )}
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                {suspendModal.action === 'suspend' ? 'Suspend User?' : 'Activate User?'}
+                            </h3>
+                            <p className="text-gray-600 mb-4">
+                                {suspendModal.action === 'suspend'
+                                    ? 'This user will no longer be able to access the platform or use any features.'
+                                    : 'This user will regain access to the platform and all their features.'}
+                            </p>
+                            <div className="bg-gray-50 rounded-lg p-3 text-left">
+                                <p className="text-sm font-bold text-gray-900">{suspendModal.user.name}</p>
+                                <p className="text-xs text-gray-500">{suspendModal.user.email}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="px-2 py-0.5 bg-indigo-50 text-primary rounded text-[10px] font-bold uppercase">
+                                        {suspendModal.user.planType || 'Free'}
+                                    </span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                        suspendModal.user.status === 'Active'
+                                            ? 'bg-green-50 text-green-600'
+                                            : 'bg-red-50 text-red-600'
+                                    }`}>
+                                        {suspendModal.user.status === 'Active' ? 'Currently Active' : 'Currently Suspended'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={closeSuspendModal}
+                                disabled={isTogglingStatus}
+                                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleToggleUserStatus}
+                                disabled={isTogglingStatus}
+                                className={`flex-1 px-4 py-2.5 text-white rounded-lg font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${
+                                    suspendModal.action === 'suspend'
+                                        ? 'bg-red-600 hover:bg-red-700'
+                                        : 'bg-green-600 hover:bg-green-700'
+                                }`}
+                            >
+                                {isTogglingStatus ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    suspendModal.action === 'suspend' ? 'Suspend User' : 'Activate User'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

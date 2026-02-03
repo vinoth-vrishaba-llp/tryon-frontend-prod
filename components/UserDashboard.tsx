@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { User, UserDashboardData } from '../types';
+import { User, UserDashboardData, Report } from '../types';
 import { getUserDashboardData } from '../services/dashboardService';
 import { apiClient } from '../services/apiClient';
 import { encryptData } from '../services/encryption';
+import UserReportsList from './UserReportsList';
+import ReportDetails from './admin/ReportDetails';
 
 interface UserDashboardProps {
     user: User;
@@ -15,6 +17,13 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
     const [data, setData] = useState<UserDashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Tab state
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'reports'>('dashboard');
+
+    // Reports state
+    const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+    const [reportsRefreshTrigger, setReportsRefreshTrigger] = useState(0);
 
     // Profile form state
     const [profileForm, setProfileForm] = useState({
@@ -123,6 +132,19 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
         }
     };
 
+    const handleReportSelect = (report: Report) => {
+        setSelectedReport(report);
+    };
+
+    const handleReportUpdate = (updatedReport: Report) => {
+        setReportsRefreshTrigger(prev => prev + 1);
+        setSelectedReport(updatedReport);
+    };
+
+    const handleCloseReportDetails = () => {
+        setSelectedReport(null);
+    };
+
     if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading Dashboard...</div>;
     if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
     if (!data) return null;
@@ -142,8 +164,39 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                 </button>
             </div>
 
-            {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Tab Navigation */}
+            <div className="mb-8">
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                activeTab === 'dashboard'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('reports')}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                activeTab === 'reports'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            My Reports
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            {/* Dashboard Tab Content */}
+            {activeTab === 'dashboard' && (
+                <>
+                    {/* Overview Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-sm text-gray-500 mb-1">Brand Name</p>
                     <p className="text-xl font-bold text-gray-900">{user.brandName || 'N/A'}</p>
@@ -375,6 +428,28 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                     </div>
                 </div>
             </div>
+                </>
+            )}
+
+            {/* Reports Tab Content */}
+            {activeTab === 'reports' && (
+                <div className="mb-8">
+                    <UserReportsList
+                        onSelectReport={handleReportSelect}
+                        refreshTrigger={reportsRefreshTrigger}
+                    />
+                </div>
+            )}
+
+            {/* Report Details Modal */}
+            {selectedReport && (
+                <ReportDetails
+                    report={selectedReport}
+                    onClose={handleCloseReportDetails}
+                    onUpdate={handleReportUpdate}
+                    readOnly={true}
+                />
+            )}
         </div>
     );
 };

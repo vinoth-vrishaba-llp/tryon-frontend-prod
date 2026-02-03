@@ -54,12 +54,20 @@ const ImageUploadCard: React.FC<ImageUploadCardProps> = ({
     setUploadProgress(0);
     setError(null);
 
+    let progress = 0;
+
     // Simulate upload processing for better UX
     const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          console.log("Upload complete");
+      progress += 15;
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setUploadProgress(100);
+        console.log("Upload complete");
+
+        // Use setTimeout to defer the parent state update
+        // This prevents "Cannot update a component while rendering" error
+        setTimeout(() => {
           const newImageFile: ImageFile = {
             id: `${file.name}-${Date.now()}`,
             file: file,
@@ -67,10 +75,10 @@ const ImageUploadCard: React.FC<ImageUploadCardProps> = ({
           };
           onImageUpload(newImageFile);
           setIsProcessing(false);
-          return 100;
-        }
-        return prev + 15;
-      });
+        }, 0);
+      } else {
+        setUploadProgress(progress);
+      }
     }, 50);
   }, [onImageUpload]);
 

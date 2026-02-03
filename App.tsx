@@ -1,10 +1,7 @@
 // frontend/App.tsx
 import React, { useState, useTransition, useEffect } from "react";
 import { Page, User, PaymentStatus, PlanType } from "./types";
-import MensTryOn from "./components/MensTryOn";
-import WomensTryOn from "./components/WomensTryOn";
-import KidsTryOn from "./components/KidsTryOn";
-import JewelleryTryOn from "./components/JewelleryTryOn";
+import TryOnWizard from "./components/TryOnWizard";
 import HomePage from "./components/HomePage";
 import Header from "./components/Header";
 import LoginPage from "./components/LoginPage";
@@ -62,12 +59,22 @@ const normalizePaymentStatus = (status?: any): PaymentStatus => {
   return "inactive";
 };
 
+// Helper to get initial page from sessionStorage (for reload persistence)
+const getInitialPage = (): Page => {
+  const stored = sessionStorage.getItem("currentPage");
+  return (stored as Page) || "home";
+};
+
+const getInitialUserId = (): string | null => {
+  return sessionStorage.getItem("selectedUserId");
+};
+
 const App: React.FC = () => {
-  const [page, setPage] = useState<Page>("home");
+  const [page, setPage] = useState<Page>(getInitialPage);
   const [user, setUser] = useState<User | null>(null);
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   const [isMaintenance, setIsMaintenance] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(getInitialUserId);
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -130,6 +137,39 @@ const App: React.FC = () => {
     setIsLoading(false);
   }, []);
 
+  // Browser history management for navigation
+  useEffect(() => {
+    // Push initial state if not already in history
+    const currentState = window.history.state;
+    if (!currentState?.page) {
+      window.history.replaceState(
+        { page, selectedUserId },
+        "",
+        window.location.pathname
+      );
+    }
+
+    // Handle browser back/forward buttons
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.page) {
+        startTransition(() => {
+          setPage(event.state.page);
+          setSelectedUserId(event.state.selectedUserId || null);
+          // Update sessionStorage to stay in sync
+          sessionStorage.setItem("currentPage", event.state.page);
+          if (event.state.selectedUserId) {
+            sessionStorage.setItem("selectedUserId", event.state.selectedUserId);
+          } else {
+            sessionStorage.removeItem("selectedUserId");
+          }
+        });
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   // Password reset token handler
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -159,32 +199,57 @@ const App: React.FC = () => {
 
   // Global navigation events
   useEffect(() => {
-    const dashboardNav = () =>
-      startTransition(() => setPage("dashboard"));
-    const addonNav = () =>
-      startTransition(() => setPage("add-on-credits"));
-    const libraryNav = () =>
-      startTransition(() => setPage("library"));
+    const navigateWithHistory = (newPage: Page) => {
+      startTransition(() => setPage(newPage));
+      sessionStorage.setItem("currentPage", newPage);
+      window.history.pushState({ page: newPage }, "", window.location.pathname);
+    };
+
+    const dashboardNav = () => navigateWithHistory("dashboard");
+    const addonNav = () => navigateWithHistory("add-on-credits");
+    const libraryNav = () => navigateWithHistory("library");
+    const pricingNav = () => navigateWithHistory("pricing");
 
     window.addEventListener("navigate-dashboard", dashboardNav);
     window.addEventListener("navigate-addon-credits", addonNav);
     window.addEventListener("navigate-library", libraryNav);
+    window.addEventListener("navigate-pricing", pricingNav);
 
     return () => {
       window.removeEventListener("navigate-dashboard", dashboardNav);
       window.removeEventListener("navigate-addon-credits", addonNav);
       window.removeEventListener("navigate-library", libraryNav);
+      window.removeEventListener("navigate-pricing", pricingNav);
     };
   }, []);
 
-  const handleNavigate = (newPage: Page) =>
-    startTransition(() => setPage(newPage));
-
-  const handleViewUser = (userId: string) =>
+  const handleNavigate = (newPage: Page, userId?: string | null) => {
     startTransition(() => {
-      setSelectedUserId(userId);
-      setPage("admin-user-details");
+      setPage(newPage);
+      if (userId !== undefined) {
+        setSelectedUserId(userId);
+      }
+
+      // Persist to sessionStorage for reload
+      sessionStorage.setItem("currentPage", newPage);
+      if (userId) {
+        sessionStorage.setItem("selectedUserId", userId);
+      } else if (userId === null) {
+        sessionStorage.removeItem("selectedUserId");
+      }
+
+      // Push to browser history for back/forward navigation
+      window.history.pushState(
+        { page: newPage, selectedUserId: userId || selectedUserId },
+        "",
+        window.location.pathname
+      );
     });
+  };
+
+  const handleViewUser = (userId: string) => {
+    handleNavigate("admin-user-details", userId);
+  };
 
   const handleLogout = () => {
     logout();
@@ -192,6 +257,11 @@ const App: React.FC = () => {
     setPage("home");
     setAuthView("login");
     setSelectedUserId(null);
+
+    // Clear navigation state on logout
+    sessionStorage.removeItem("currentPage");
+    sessionStorage.removeItem("selectedUserId");
+    window.history.replaceState({ page: "home" }, "", window.location.pathname);
   };
 
   const handleUserUpdate = (updatedUser: any) => {
@@ -220,13 +290,13 @@ const App: React.FC = () => {
 
     switch (page) {
       case "mens":
-        return <MensTryOn user={user!} onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
+        return <TryOnWizard user={user!} category="men" onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
       case "womens":
-        return <WomensTryOn user={user!} onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
+        return <TryOnWizard user={user!} category="women" onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
       case "kids":
-        return <KidsTryOn user={user!} onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
+        return <TryOnWizard user={user!} category="kids" onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
       case "jewellery":
-        return <JewelleryTryOn user={user!} onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
+        return <TryOnWizard user={user!} category="jewellery" onNavigate={handleNavigate} onCreditsUpdate={handleCreditsUpdate} />;
       case "library":
         return <LibraryPage user={user!} onNavigate={handleNavigate} />;
       case "dashboard":
@@ -260,8 +330,8 @@ const App: React.FC = () => {
             token={resetToken}
             onNavigateToLogin={() => {
               setResetToken(null);
-              setPage("home");
               setAuthView("login");
+              handleNavigate("home");
             }}
           />
         ) : (
@@ -347,7 +417,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-gray-800">
+    <div className="min-h-screen bg-slate-100 text-gray-800 overflow-x-hidden">
       <Header
         onHomeClick={() => handleNavigate("home")}
         showHomeButton={page !== "home"}
