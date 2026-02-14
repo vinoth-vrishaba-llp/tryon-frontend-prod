@@ -320,13 +320,13 @@ const ModelCustomizer: React.FC<ModelCustomizerProps> = ({
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <ToggleOption
                 label="Show Outfit Details Layer"
-                checked={previewOptions.showOutfitDetails}
-                onChange={(val) => onPreviewOptionsChange({...previewOptions, showOutfitDetails: val})}
+                checked={true}
+                onChange={() => {}}
             />
             <ToggleOption
                 label="Highlight Fabric Texture"
-                checked={previewOptions.highlightFabricTexture}
-                onChange={(val) => onPreviewOptionsChange({...previewOptions, highlightFabricTexture: val})}
+                checked={true}
+                onChange={() => {}}
             />
          </div>
        </div>

@@ -165,13 +165,13 @@ const ModelStep: React.FC<ModelStepProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ToggleOption
             label="Show Outfit Details Layer"
-            checked={previewOptions.showOutfitDetails}
-            onChange={(val) => onPreviewOptionsChange({ ...previewOptions, showOutfitDetails: val })}
+            checked={true}
+            onChange={() => {}}
           />
           <ToggleOption
             label="Highlight Fabric Texture"
-            checked={previewOptions.highlightFabricTexture}
-            onChange={(val) => onPreviewOptionsChange({ ...previewOptions, highlightFabricTexture: val })}
+            checked={true}
+            onChange={() => {}}
           />
         </div>
       </div>

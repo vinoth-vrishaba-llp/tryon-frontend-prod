@@ -21,8 +21,8 @@ const DEFAULT_CONFIG: ConfigState = {
     fitType: FIT_TYPE_OPTIONS[1], // Default to 'Regular'
     bodyType: BODY_TYPE_OPTIONS_WOMEN[0], // Default to 'Slim'
     previewOptions: {
-        showOutfitDetails: false,
-        highlightFabricTexture: false
+        showOutfitDetails: true,
+        highlightFabricTexture: true
     }
 };
 

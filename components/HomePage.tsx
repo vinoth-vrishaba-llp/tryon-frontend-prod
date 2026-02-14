@@ -101,11 +101,12 @@ const HomePage: React.FC<HomePageProps> = ({ user, onNavigate }) => {
       imageUrl={womensImage}
       onClick={() => onNavigate('womens')} 
     />
-    <CategoryCard 
-      title="Jewellery Studio" 
-      description="Necklaces, rings, and fine ornaments." 
+    <CategoryCard
+      title="Jewellery Studio"
+      description="Necklaces, rings, and fine ornaments."
       imageUrl={jewelleryImage}
-      onClick={() => onNavigate('jewellery')} 
+      onClick={() => onNavigate('jewellery')}
+      disabled
     />
     <CategoryCard 
       title="Kids' Collection" 
@@ -118,25 +119,38 @@ const HomePage: React.FC<HomePageProps> = ({ user, onNavigate }) => {
   );
 };
 
-const CategoryCard: React.FC<{ title: string; description: string; imageUrl: string; onClick: () => void }> = ({
+const CategoryCard: React.FC<{ title: string; description: string; imageUrl: string; onClick: () => void; disabled?: boolean }> = ({
   title,
   description,
   imageUrl,
-  onClick
+  onClick,
+  disabled = false
 }) => (
   <div
-    onClick={onClick}
-    className="group relative rounded-2xl overflow-hidden shadow-xl cursor-pointer transform transition-all duration-500 hover:-translate-y-2"
+    onClick={disabled ? undefined : onClick}
+    aria-disabled={disabled}
+    className={`group relative rounded-2xl overflow-hidden shadow-xl transform transition-all duration-500 ${
+      disabled
+        ? 'pointer-events-none opacity-60 grayscale cursor-not-allowed select-none'
+        : 'cursor-pointer hover:-translate-y-2'
+    }`}
   >
     <img
       src={imageUrl}
       alt={title}
-      className="w-full h-80 object-cover transition-transform duration-700 group-hover:scale-110"
+      className={`w-full h-80 object-cover transition-transform duration-700 ${disabled ? '' : 'group-hover:scale-110'}`}
     />
     <div className="absolute inset-0 bg-gradient-to-t from-surface-inverse/95 via-surface-inverse/20 to-transparent flex flex-col items-center justify-end p-6 text-center">
       <h3 className="text-2xl font-black text-content-inverse mb-2">{title}</h3>
-      <p className="text-xs text-content-disabled font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500">{description}</p>
+      <p className={`text-xs text-content-disabled font-medium ${disabled ? 'hidden' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-500`}>{description}</p>
     </div>
+    {disabled && (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+        <span className="bg-white/90 text-gray-800 text-sm font-black uppercase tracking-widest px-6 py-3 rounded-full shadow-lg">
+          Coming Soon
+        </span>
+      </div>
+    )}
   </div>
 );
 
