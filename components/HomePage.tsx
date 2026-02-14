@@ -102,17 +102,17 @@ const HomePage: React.FC<HomePageProps> = ({ user, onNavigate }) => {
       onClick={() => onNavigate('womens')} 
     />
     <CategoryCard
+      title="Kids' Collection"
+      description="Adorable styles for trendsetters."
+      imageUrl={kidsImage}
+      onClick={() => onNavigate('kids')}
+    />
+    <CategoryCard
       title="Jewellery Studio"
       description="Necklaces, rings, and fine ornaments."
       imageUrl={jewelleryImage}
       onClick={() => onNavigate('jewellery')}
       disabled
-    />
-    <CategoryCard 
-      title="Kids' Collection" 
-      description="Adorable styles for trendsetters." 
-      imageUrl={kidsImage}
-      onClick={() => onNavigate('kids')} 
     />
   </div>
 </div>
