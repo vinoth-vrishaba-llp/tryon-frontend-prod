@@ -193,11 +193,15 @@ export const hasActivePaidPlan = (user: User | null): boolean => {
     return true;
 };
 
+export const hasRemainingCredits = (user: User | null): boolean => {
+    return (user?.tokenBalance || 0) > 0;
+};
+
 export const canGenerateImages = (
     user: User | null,
     creditsNeeded = 3
 ): boolean => {
-    if (!hasActivePaidPlan(user)) return false;
+    if (!hasActivePaidPlan(user) && !hasRemainingCredits(user)) return false;
     return (user?.tokenBalance || 0) >= creditsNeeded;
 };
 
@@ -209,7 +213,14 @@ export const canUseQuality = (
     user: User | null,
     quality: "standard" | "high" | "ultra"
 ): boolean => {
-    if (!hasActivePaidPlan(user)) return false;
+    if (!hasActivePaidPlan(user)) {
+        // Expired subscription with remaining credits: allow the quality tier of their last plan
+        if (hasRemainingCredits(user) && user?.planType !== "Free") {
+            if (user?.planType === "Basic") return quality === "standard";
+            return true;
+        }
+        return false;
+    }
     if (user?.planType === "Basic") return quality === "standard";
     return true;
 };
@@ -222,10 +233,10 @@ export const getCreditCost = (
 
 export const isFreeUser = (user: User | null): boolean => {
     if (!user) return true;
-    return (
-        user.planType === "Free" ||
-        normalizePaymentStatus(user.paymentStatus) !== "active"
-    );
+    if (user.planType === "Free") return true;
+    // User with a paid plan (even expired) who still has credits is not "free"
+    if (hasRemainingCredits(user)) return false;
+    return normalizePaymentStatus(user.paymentStatus) !== "active";
 };
 
 export const isSubscriptionExpired = (user: User | null): boolean => {
@@ -248,14 +259,16 @@ export const getSubscriptionStatus = (
 ): SubscriptionStatus => {
     const hasActive = hasActivePaidPlan(user);
 
+    const credits = user?.tokenBalance || 0;
+
     return {
         hasActivePlan: hasActive,
         planType: user?.planType || "Free",
         paymentStatus: normalizePaymentStatus(user?.paymentStatus),
-        creditsRemaining: user?.tokenBalance || 0,
+        creditsRemaining: credits,
         subscriptionEnd:
             user?.subscriptionEnd || user?.subscriptionExpiry || null,
-        canGenerateImages: hasActive && (user?.tokenBalance || 0) > 0,
+        canGenerateImages: (hasActive || credits > 0) && credits > 0,
         canPurchaseAddons: hasActive,
         isExpired: isSubscriptionExpired(user),
         isFree: isFreeUser(user)
@@ -269,10 +282,11 @@ export const validateGenerationAttempt = (
     if (!user)
         return { allowed: false, error: "Please log in", action: "login" };
 
-    if (!hasActivePaidPlan(user))
+    // Block only if no active plan AND no remaining credits
+    if (!hasActivePaidPlan(user) && !hasRemainingCredits(user))
         return {
             allowed: false,
-            error: "No active subscription. Please upgrade.",
+            error: "No active subscription and no remaining credits. Please upgrade.",
             action: "upgrade"
         };
 

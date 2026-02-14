@@ -117,8 +117,8 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
   return (
     <div className="space-y-6">
       {/* Time of Day */}
-      <div className="bg-gray-50 p-4 rounded-xl">
-        <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Time of Day</h4>
+      <div className="bg-surface-secondary p-4 rounded-xl">
+        <h4 className="text-xs font-black text-content-disabled mb-3 uppercase tracking-widest">Time of Day</h4>
         <div className="flex flex-wrap gap-2">
           {TIME_OPTIONS.map((option) => (
             <button
@@ -126,8 +126,8 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
               onClick={() => onTimeChange(option)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                 selectedTime.id === option.id
-                  ? 'bg-secondary text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-secondary text-content-inverse shadow-md'
+                  : 'bg-surface text-content-secondary hover:bg-interactive-hover border border-border'
               }`}
             >
               {option.name}
@@ -137,8 +137,8 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
       </div>
 
       {/* Camera Type */}
-      <div className="bg-gray-50 p-4 rounded-xl">
-        <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Camera Type</h4>
+      <div className="bg-surface-secondary p-4 rounded-xl">
+        <h4 className="text-xs font-black text-content-disabled mb-3 uppercase tracking-widest">Camera Type</h4>
         <div className="flex flex-wrap gap-2">
           {CAMERA_OPTIONS.map((option) => (
             <button
@@ -146,8 +146,8 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
               onClick={() => onCameraChange(option)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                 selectedCamera.id === option.id
-                  ? 'bg-secondary text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-secondary text-content-inverse shadow-md'
+                  : 'bg-surface text-content-secondary hover:bg-interactive-hover border border-border'
               }`}
             >
               {option.name}
@@ -157,9 +157,9 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
       </div>
 
       {/* Image Quality */}
-      <div className="bg-gray-50 p-4 rounded-xl">
+      <div className="bg-surface-secondary p-4 rounded-xl">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Image Quality</h4>
+          <h4 className="text-xs font-black text-content-disabled uppercase tracking-widest">Image Quality</h4>
           {user.planType === 'Basic' && (
             <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full border border-orange-200">
               Basic Plan: 1K Only
@@ -179,10 +179,10 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                   disabled={isLocked}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex flex-col items-center ${
                     isSelected
-                      ? 'bg-secondary text-white shadow-md'
+                      ? 'bg-secondary text-content-inverse shadow-md'
                       : isLocked
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-dashed border-gray-300'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                        ? 'bg-surface-tertiary text-content-disabled cursor-not-allowed border-2 border-dashed border-border-secondary'
+                        : 'bg-surface text-content-secondary hover:bg-interactive-hover border border-border'
                   }`}
                 >
                   <div className={`flex items-center gap-1 ${isLocked ? 'opacity-60' : ''}`}>
@@ -199,8 +199,8 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                 </button>
 
                 {/* Tooltip */}
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 bg-gray-900 text-white p-3 rounded-lg text-[11px] shadow-2xl opacity-0 invisible group-hover/opt:opacity-100 group-hover/opt:visible transition-all z-30 pointer-events-none border border-gray-700">
-                  <p className="font-bold border-b border-gray-700 mb-1 pb-1">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 bg-surface-inverse text-content-inverse p-3 rounded-lg text-[11px] shadow-2xl opacity-0 invisible group-hover/opt:opacity-100 group-hover/opt:visible transition-all z-30 pointer-events-none border border-secondary">
+                  <p className="font-bold border-b border-secondary mb-1 pb-1">
                     {option.id === 'standard' ? 'Fast & Efficient' : option.id === 'high' ? 'High Detail' : 'Ultra-HD'}
                   </p>
                   <p className="leading-relaxed mb-2">
@@ -224,7 +224,7 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                     </div>
                   )}
 
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 border-r border-b border-gray-700"></div>
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface-inverse rotate-45 border-r border-b border-secondary"></div>
                 </div>
               </div>
             );
@@ -249,11 +249,11 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
       </div>
 
       {/* Background Selection */}
-      <div className="bg-gray-50 p-4 rounded-xl">
-        <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Environment Background</h4>
+      <div className="bg-surface-secondary p-4 rounded-xl">
+        <h4 className="text-xs font-black text-content-disabled mb-3 uppercase tracking-widest">Environment Background</h4>
 
         {/* Category Filter */}
-        <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-gray-200">
+        <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-border">
           {backgroundCategories.map(cat => {
             const Icon = BackgroundCategoryIcons[cat];
             const count = cat === 'all' ? allBackgroundOptions.length : allBackgroundOptions.filter(o => o.category === cat).length;
@@ -264,14 +264,14 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                 onClick={() => setActiveBackgroundCategory(cat)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
                   activeBackgroundCategory === cat
-                    ? 'bg-primary text-white border-primary shadow-md'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                    ? 'bg-primary text-content-inverse border-primary shadow-md'
+                    : 'bg-surface text-content-secondary border-border hover:bg-surface-secondary hover:border-border-secondary'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {BackgroundCategoryLabels[cat]}
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  activeBackgroundCategory === cat ? 'bg-white/20' : 'bg-gray-100'
+                  activeBackgroundCategory === cat ? 'bg-white/20' : 'bg-surface-tertiary'
                 }`}>
                   {count}
                 </span>
@@ -290,7 +290,7 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                 className={`group relative rounded-xl overflow-hidden transition-all ${
                   selectedBackground.id === option.id
                     ? 'ring-2 ring-primary ring-offset-2 shadow-lg'
-                    : 'border border-gray-200 hover:border-gray-300 hover:shadow-md'
+                    : 'border border-border hover:border-border-secondary hover:shadow-md'
                 }`}
               >
                 {/* Background Image or Placeholder */}
@@ -305,10 +305,10 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                   </div>
                 ) : (
                   <div className={`aspect-[4/3] w-full flex items-center justify-center ${
-                    selectedBackground.id === option.id ? 'bg-primary' : 'bg-gray-100'
+                    selectedBackground.id === option.id ? 'bg-primary' : 'bg-surface-tertiary'
                   }`}>
                     <CategoryIcon className={`h-10 w-10 ${
-                      selectedBackground.id === option.id ? 'text-white' : 'text-gray-400'
+                      selectedBackground.id === option.id ? 'text-content-inverse' : 'text-content-disabled'
                     }`} />
                   </div>
                 )}
@@ -317,22 +317,22 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                 <div className={`absolute bottom-0 left-0 right-0 px-2 py-1.5 ${
                   option.image
                     ? 'bg-gradient-to-t from-black/70 to-transparent'
-                    : selectedBackground.id === option.id ? 'bg-primary' : 'bg-white border-t'
+                    : selectedBackground.id === option.id ? 'bg-primary' : 'bg-surface border-t'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-semibold truncate ${
-                      option.image || selectedBackground.id === option.id ? 'text-white' : 'text-gray-700'
+                      option.image || selectedBackground.id === option.id ? 'text-content-inverse' : 'text-content-secondary'
                     }`}>
                       {option.name}
                     </span>
                     {selectedBackground.id === option.id && (
-                      <svg className="w-4 h-4 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-content-inverse flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
                   </div>
                   <div className={`flex items-center gap-1 text-[9px] ${
-                    option.image || selectedBackground.id === option.id ? 'text-white/70' : 'text-gray-400'
+                    option.image || selectedBackground.id === option.id ? 'text-content-inverse/70' : 'text-content-disabled'
                   }`}>
                     <CategoryIcon className="h-2.5 w-2.5" />
                     <span className="capitalize">{option.category}</span>
@@ -344,7 +344,7 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
         </div>
 
         {filteredBackgroundOptions.length === 0 && (
-          <div className="text-center py-6 text-gray-400">
+          <div className="text-center py-6 text-content-disabled">
             <p className="text-sm">No backgrounds in this category</p>
           </div>
         )}

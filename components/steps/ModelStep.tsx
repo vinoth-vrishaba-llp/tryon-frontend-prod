@@ -180,18 +180,36 @@ const ModelStep: React.FC<ModelStepProps> = ({
       {hairStyleOptions && hairStyleOptions.length > 0 && selectedHairStyle && onHairStyleChange && (
         <div className="bg-gray-50 p-4 rounded-xl">
           <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Hair Style</h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2">
             {hairStyleOptions.map((style) => (
               <button
                 key={style.id}
                 onClick={() => onHairStyleChange(style)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                className={`flex flex-col items-center p-2 rounded-lg transition-all ${
                   selectedHairStyle.id === style.id
                     ? 'bg-secondary text-white shadow-md'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
-                {style.name}
+                {style.image ? (
+                  <img
+                    src={style.image}
+                    alt={style.name}
+                    className={`w-32 h-32 rounded-lg object-cover mb-1 border-2 ${
+                      selectedHairStyle.id === style.id ? 'border-white' : 'border-transparent'
+                    }`}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className={`w-12 h-12 rounded-lg mb-1 flex items-center justify-center ${
+                    selectedHairStyle.id === style.id ? 'bg-white/20' : 'bg-gray-100'
+                  }`}>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121A3 3 0 1 0 9.88 9.88m4.242 4.242L9.878 9.879m4.243 4.242a3 3 0 0 1-4.243 0M9.879 9.879a3 3 0 0 1 4.242 0M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                    </svg>
+                  </div>
+                )}
+                <span className="text-xs font-medium text-center leading-tight">{style.name}</span>
               </button>
             ))}
           </div>
@@ -308,7 +326,7 @@ const ModelStep: React.FC<ModelStepProps> = ({
       {/* Expression Selection */}
       <div className="bg-gray-50 p-4 rounded-xl">
         <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">Expression</h4>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2">
           {expressionOptions.map((option) => (
             <button
               key={option.id}
@@ -323,7 +341,7 @@ const ModelStep: React.FC<ModelStepProps> = ({
                 <img
                   src={option.image}
                   alt={option.name}
-                  className={`w-12 h-12 rounded-lg object-cover mb-1 border-2 ${
+                  className={`w-32 h-32 rounded-lg object-cover mb-1 border-2 ${
                     selectedExpression.id === option.id ? 'border-white' : 'border-transparent'
                   }`}
                   loading="lazy"
@@ -344,7 +362,7 @@ const ModelStep: React.FC<ModelStepProps> = ({
       {/* View Selection */}
       <div className="bg-gray-50 p-4 rounded-xl">
         <h4 className="text-xs font-black text-gray-400 mb-3 uppercase tracking-widest">View</h4>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2">
           {viewOptions.map((option) => (
             <button
               key={option.id}
@@ -359,13 +377,13 @@ const ModelStep: React.FC<ModelStepProps> = ({
                 <img
                   src={option.image}
                   alt={option.name}
-                  className={`w-14 h-14 rounded-lg object-cover mb-1 border-2 ${
+                  className={`w-25 h-40 rounded-lg object-cover mb-1 border-2 ${
                     selectedView.id === option.id ? 'border-white' : 'border-transparent'
                   }`}
                   loading="lazy"
                 />
               ) : (
-                <div className={`w-14 h-14 rounded-lg mb-1 flex items-center justify-center ${
+                <div className={`w-25 h-40 rounded-lg mb-1 flex items-center justify-center ${
                   selectedView.id === option.id ? 'bg-white/20' : 'bg-gray-100'
                 }`}>
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

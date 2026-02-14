@@ -46,6 +46,7 @@ export interface HairStyleOption {
   id: string;
   name: string;
   prompt: string;
+  image?: string;
 }
 
 export interface FitTypeOption {
@@ -166,84 +167,78 @@ export const BACKGROUND_OPTIONS: BackgroundOption[] = [
 
 // Category-specific BACKGROUND OPTIONS
 export const BACKGROUND_OPTIONS_WOMEN: BackgroundOption[] = [
-  { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio' },
-  { id: 'temple-corridor', name: 'Temple Mandapam', prompt: 'Place the fully rendered model in an ancient South Indian temple corridor with carved granite pillars. Warm,Spiritual and historic atmosphere.', category: 'heritage' },
-  { id: 'outside-mylapore', name: 'Outside Mylapore Temple', prompt: 'Place the model on the vibrant street outside Kapaleeshwarar Temple, Mylapore. The towering, colorful Gopuram is visible in the background. Natural daylight with the hustle and bustle of a traditional Chennai street.', category: 'heritage' },
-  { id: 'kochi-cafe', name: 'Kochi Heritage Cafe', prompt: 'Place the model inside a rustic, high-ceilinged heritage cafe in Fort Kochi. Features include wooden rafters, colonial-style windows, tropical plants, and a relaxed, aesthetic atmosphere.', category: 'urban' },
-  { id: 'indiranagar-street', name: 'Indiranagar Street, Bangalore', prompt: 'Place the model on a beautiful tree-lined street in Indiranagar, Bangalore. Upscale urban setting with lush green canopies, modern storefronts, and a clean city vibe.', category: 'urban' },
-  { id: 'pondicherry-french', name: 'French Colony, Pondicherry', prompt: 'Place the model on a street in the White Town area of Pondicherry. Iconic bright yellow colonial buildings with white trim, bougainvillea flowers spilling over walls, and a clean, European-Indian hybrid aesthetic.', category: 'urban' },
-  { id: 'marine-drive-beach', name: 'Mumbai Marine Drive', prompt: "Place the model on the promenade of Marine Drive, Mumbai. The Arabian Sea and the iconic tetrapods are in view, with the Queen's Necklace skyline visible in the distance during a breezy evening.", category: 'urban' },
-  { id: 'chennai-central', name: 'Chennai Central Station', prompt: 'Place the model in front of the iconic red brick heritage building of Chennai Central Railway Station. Grand architectural background with Victorian-Gothic details and a sense of historic travel.', category: 'heritage' },
-  { id: 'chettinad-wall', name: 'Chettinad Sunlit Wall', prompt: 'Place the fully rendered model against a warm, textured yellow plaster wall typical of a Chettinad house in Tamil Nadu, with dramatic natural shadows cast by coconut palm leaves.', category: 'traditional' },
-  { id: 'red-oxide-floor', name: 'Red Oxide Veranda', prompt: 'Place the fully rendered model standing on a traditional red oxide floor in a semi-open veranda, with antique wooden pillars.', category: 'traditional' },
-  { id: 'kerala-backwaters', name: 'Kerala Backwaters', prompt: 'Place the fully rendered model on the wooden deck of a traditional houseboat in Alappuzha, Kerala.', category: 'nature' },
-  { id: 'mahabalipuram-shore', name: 'Mahabalipuram Shore', prompt: 'Place the fully rendered model on the sandy beach near the Shore Temple in Mahabalipuram, Tamil Nadu.', category: 'nature' },
-  { id: 'ooty-tea-garden', name: 'Ooty Tea Garden', prompt: 'Place the fully rendered model standing on a narrow pathway in a lush green tea estate in Ooty/Nilgiris.', category: 'nature' },
-  { id: 'chettinad-courtyard', name: 'Chettinad Courtyard', prompt: 'Place the fully rendered model in the central courtyard of a traditional Chettinad mansion.', category: 'traditional' },
-  { id: 'royal-crimson', name: 'Royal Crimson Studio', prompt: 'A deep crimson textured plaster wall with a subtle floral leaf pattern. A heavy golden-mustard silk curtain drapes on the right. Features a vintage ornate velvet chair with a floral bouquet, antique candelabras, and a classic Persian rug.', category: 'studio' },
-  { id: 'mughal-heritage', name: 'Mughal Heritage Arch', prompt: 'A grand Mughal-style interior with light sandstone walls, intricate arch carvings, and delicate floral murals. Includes a vintage wooden side table with a brass candle stand under soft, diffused morning sunlight.', category: 'heritage' },
-  { id: 'rustic-orange', name: 'Rustic Boho Orange', prompt: 'A vibrant, rustic orange-textured wall with an earthy feel. A dark wood carved jali room divider is on the left, and simple wooden shelves with antique pottery and vases are on the right. Features a classic red patterned rug.', category: 'traditional' },
-  { id: 'earthy-minimalist', name: 'Earthy Minimalist', prompt: 'A clean, minimalist studio background in warm tan/terracotta. Includes a lush palm plant, a woven vase with dried pampas grass, and natural woven floor mats under soft organic lighting.', category: 'studio' },
-  { id: 'turquoise-palace', name: 'Grand Turquoise Hall', prompt: 'A majestic palace hall with turquoise patterned wallpaper and white ornate Victorian arches. Includes a dark carved wooden console table with a flower vase and intricate blue-and-white patterned floor tiles.', category: 'heritage' },
-  { id: 'floral-arbour', name: 'Wedding Floral Arbour', prompt: 'A festive backdrop with cream leaf-patterned wallpaper, framed by a lush arch of white and peach roses and greenery. Features hanging crystal beaded globes and a vibrant green grass floor.', category: 'wedding' },
-  { id: 'modern-stripes', name: 'Modern Urban Stripes', prompt: 'A contemporary urban background with vertical red, green, and blue stripes. A large green palm leaf overlaps the composition on the left. Features a clean concrete-paved floor under bright natural daylight.', category: 'urban' }
+  { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio',image:"https://cdn.hyperreach.site/assets/real_bg/white_studio.webp" },
+  { id: 'temple-corridor', name: 'Temple Mandapam', prompt: 'Place the fully rendered model in an ancient South Indian temple corridor with carved granite pillars. Warm,Spiritual and historic atmosphere.', category: 'heritage',image:"https://cdn.hyperreach.site/assets/real_bg/temple_mandapam.webp"},
+  { id: 'outside-mylapore', name: 'Outside Mylapore Temple', prompt: 'Place the model on the vibrant street outside Kapaleeshwarar Temple, Mylapore. The towering, colorful Gopuram is visible in the background. Natural daylight with the hustle and bustle of a traditional Chennai street.', category: 'heritage',image:"https://cdn.hyperreach.site/assets/real_bg/outside_mylapore_temple.webp" },
+  { id: 'kochi-cafe', name: 'Kochi Heritage Cafe', prompt: 'Place the model inside a rustic, high-ceilinged heritage cafe in Fort Kochi. Features include wooden rafters, colonial-style windows, tropical plants, and a relaxed, aesthetic atmosphere.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/kochi_heritage_cafe.webp"},
+  { id: 'indiranagar-street', name: 'Indiranagar Street, Bangalore', prompt: 'Place the model on a beautiful tree-lined street in Indiranagar, Bangalore. Upscale urban setting with lush green canopies, modern storefronts, and a clean city vibe.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/indiranagar_street_banglore.webp"},
+  { id: 'pondicherry-french', name: 'French Colony, Pondicherry', prompt: 'Place the model on a street in the White Town area of Pondicherry. Iconic bright yellow colonial buildings with white trim, bougainvillea flowers spilling over walls, and a clean, European-Indian hybrid aesthetic.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/french_colony_pondicherry.webp"},
+  { id: 'marine-drive-beach', name: 'Mumbai Marine Drive', prompt: "Place the model on the promenade of Marine Drive, Mumbai. The Arabian Sea and the iconic tetrapods are in view, with the Queen's Necklace skyline visible in the distance during a breezy evening.", category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/mumbai_marine_drive.webp"},
+  { id: 'chennai-central', name: 'Chennai Central Station', prompt: 'Place the model in front of the iconic red brick heritage building of Chennai Central Railway Station. Grand architectural background with Victorian-Gothic details and a sense of historic travel.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/chennai_central.webp"},
+  { id: 'chettinad-wall', name: 'Chettinad Sunlit Wall', prompt: 'Place the fully rendered model against a warm, textured yellow plaster wall typical of a Chettinad house in Tamil Nadu, with dramatic natural shadows cast by coconut palm leaves.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/chettinad_wall.webp"},
+  { id: 'red-oxide-floor', name: 'Red Oxide Veranda', prompt: 'Place the fully rendered model standing on a traditional red oxide floor in a semi-open veranda, with antique wooden pillars.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/red_oxide_floor.webp"},
+  { id: 'kerala-backwaters', name: 'Kerala Backwaters', prompt: 'Place the fully rendered model on the wooden deck of a traditional houseboat in Alappuzha, Kerala.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/kerala_backwaters.webp"},
+  { id: 'mahabalipuram-shore', name: 'Mahabalipuram Shore', prompt: 'Place the fully rendered model on the sandy beach near the Shore Temple in Mahabalipuram, Tamil Nadu.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/mahabalipuram_shore.webp"},
+  { id: 'ooty-tea-garden', name: 'Ooty Tea Garden', prompt: 'Place the fully rendered model standing on a narrow pathway in a lush green tea estate in Ooty/Nilgiris.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/ooty_tea_garden.webp"},
+  { id: 'chettinad-courtyard', name: 'Chettinad Courtyard', prompt: 'Place the fully rendered model in the central courtyard of a traditional Chettinad mansion.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/chettinad_courtyard.webp"},
+  { id: 'royal-crimson', name: 'Royal Crimson Studio', prompt: 'A deep crimson textured plaster wall with a subtle floral leaf pattern. A heavy golden-mustard silk curtain drapes on the right. Features a vintage ornate velvet chair with a floral bouquet, antique candelabras, and a classic Persian rug.', category: 'studio',image:"https://cdn.hyperreach.site/assets/real_bg/royal_crimson.webp" },
+  { id: 'mughal-heritage', name: 'Mughal Heritage Arch', prompt: 'A grand Mughal-style interior with light sandstone walls, intricate arch carvings, and delicate floral murals. Includes a vintage wooden side table with a brass candle stand under soft, diffused morning sunlight.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/mughal_heritage.webp"},
+  { id: 'rustic-orange', name: 'Rustic Boho Orange', prompt: 'A vibrant, rustic orange-textured wall with an earthy feel. A dark wood carved jali room divider is on the left, and simple wooden shelves with antique pottery and vases are on the right. Features a classic red patterned rug.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/rustic_orange.webp"},
+  { id: 'earthy-minimalist', name: 'Earthy Minimalist', prompt: 'A clean, minimalist studio background in warm tan/terracotta. Includes a lush palm plant, a woven vase with dried pampas grass, and natural woven floor mats under soft organic lighting.', category: 'studio' ,image:"https://cdn.hyperreach.site/assets/real_bg/earthy_minimalist.webp"},
+  { id: 'turquoise-palace', name: 'Grand Turquoise Hall', prompt: 'A majestic palace hall with turquoise patterned wallpaper and white ornate Victorian arches. Includes a dark carved wooden console table with a flower vase and intricate blue-and-white patterned floor tiles.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/turquoise_palace.webp"},
+  { id: 'floral-arbour', name: 'Wedding Floral Arbour', prompt: 'A festive backdrop with cream leaf-patterned wallpaper, framed by a lush arch of white and peach roses and greenery. Features hanging crystal beaded globes and a vibrant green grass floor.', category: 'wedding' ,image:"https://cdn.hyperreach.site/assets/real_bg/floral_arbour.webp"},
+  { id: 'modern-stripes', name: 'Modern Urban Stripes', prompt: 'A contemporary urban background with vertical red, green, and blue stripes. A large green palm leaf overlaps the composition on the left. Features a clean concrete-paved floor under bright natural daylight.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/modern_stripes.webp"}
 ];
 
 export const BACKGROUND_OPTIONS_MEN: BackgroundOption[] = [
-  { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio' },
-  { id: 'temple-corridor', name: 'Temple Mandapam', prompt: 'Place the fully rendered model in an ancient South Indian temple corridor with carved granite pillars. Warm,Spiritual and historic atmosphere.', category: 'heritage' },
-  { id: 'outside-mylapore', name: 'Outside Mylapore Temple', prompt: 'Place the model on the vibrant street outside Kapaleeshwarar Temple, Mylapore. The towering, colorful Gopuram is visible in the background. Natural daylight with the hustle and bustle of a traditional Chennai street.', category: 'heritage' },
-  { id: 'kochi-cafe', name: 'Kochi Heritage Cafe', prompt: 'Place the model inside a rustic, high-ceilinged heritage cafe in Fort Kochi. Features include wooden rafters, colonial-style windows, tropical plants, and a relaxed, aesthetic atmosphere.', category: 'urban' },
-  { id: 'indiranagar-street', name: 'Indiranagar Street, Bangalore', prompt: 'Place the model on a beautiful tree-lined street in Indiranagar, Bangalore. Upscale urban setting with lush green canopies, modern storefronts, and a clean city vibe.', category: 'urban' },
-  { id: 'pondicherry-french', name: 'French Colony, Pondicherry', prompt: 'Place the model on a street in the White Town area of Pondicherry. Iconic bright yellow colonial buildings with white trim, bougainvillea flowers spilling over walls, and a clean, European-Indian hybrid aesthetic.', category: 'urban' },
-  { id: 'marine-drive-beach', name: 'Mumbai Marine Drive', prompt: "Place the model on the promenade of Marine Drive, Mumbai. The Arabian Sea and the iconic tetrapods are in view, with the Queen's Necklace skyline visible in the distance during a breezy evening.", category: 'urban' },
-  { id: 'chennai-central', name: 'Chennai Central Station', prompt: 'Place the model in front of the iconic red brick heritage building of Chennai Central Railway Station. Grand architectural background with Victorian-Gothic details and a sense of historic travel.', category: 'heritage' },
-  { id: 'chettinad-wall', name: 'Chettinad Sunlit Wall', prompt: 'Place the fully rendered model against a warm, textured yellow plaster wall typical of a Chettinad house in Tamil Nadu, with dramatic natural shadows cast by coconut palm leaves.', category: 'traditional' },
-  { id: 'red-oxide-floor', name: 'Red Oxide Veranda', prompt: 'Place the fully rendered model standing on a traditional red oxide floor in a semi-open veranda, with antique wooden pillars.', category: 'traditional' },
-  { id: 'kerala-backwaters', name: 'Kerala Backwaters', prompt: 'Place the fully rendered model on the wooden deck of a traditional houseboat in Alappuzha, Kerala.', category: 'nature' },
-  { id: 'mahabalipuram-shore', name: 'Mahabalipuram Shore', prompt: 'Place the fully rendered model on the sandy beach near the Shore Temple in Mahabalipuram, Tamil Nadu.', category: 'nature' },
-  { id: 'ooty-tea-garden', name: 'Ooty Tea Garden', prompt: 'Place the fully rendered model standing on a narrow pathway in a lush green tea estate in Ooty/Nilgiris.', category: 'nature' },
-  { id: 'chettinad-courtyard', name: 'Chettinad Courtyard', prompt: 'Place the fully rendered model in the central courtyard of a traditional Chettinad mansion.', category: 'traditional' },
-  { id: 'royal-crimson', name: 'Royal Crimson Studio', prompt: 'A deep crimson textured plaster wall with a subtle floral leaf pattern. A heavy golden-mustard silk curtain drapes on the right. Features a vintage ornate velvet chair with a floral bouquet, antique candelabras, and a classic Persian rug.', category: 'studio' },
-  { id: 'mughal-heritage', name: 'Mughal Heritage Arch', prompt: 'A grand Mughal-style interior with light sandstone walls, intricate arch carvings, and delicate floral murals. Includes a vintage wooden side table with a brass candle stand under soft, diffused morning sunlight.', category: 'heritage' },
-  { id: 'rustic-orange', name: 'Rustic Boho Orange', prompt: 'A vibrant, rustic orange-textured wall with an earthy feel. A dark wood carved jali room divider is on the left, and simple wooden shelves with antique pottery and vases are on the right. Features a classic red patterned rug.', category: 'traditional' },
-  { id: 'earthy-minimalist', name: 'Earthy Minimalist', prompt: 'A clean, minimalist studio background in warm tan/terracotta. Includes a lush palm plant, a woven vase with dried pampas grass, and natural woven floor mats under soft organic lighting.', category: 'studio' },
-  { id: 'turquoise-palace', name: 'Grand Turquoise Hall', prompt: 'A majestic palace hall with turquoise patterned wallpaper and white ornate Victorian arches. Includes a dark carved wooden console table with a flower vase and intricate blue-and-white patterned floor tiles.', category: 'heritage' },
-  { id: 'floral-arbour', name: 'Wedding Floral Arbour', prompt: 'A festive backdrop with cream leaf-patterned wallpaper, framed by a lush arch of white and peach roses and greenery. Features hanging crystal beaded globes and a vibrant green grass floor.', category: 'wedding' },
-  { id: 'modern-stripes', name: 'Modern Urban Stripes', prompt: 'A contemporary urban background with vertical red, green, and blue stripes. A large green palm leaf overlaps the composition on the left. Features a clean concrete-paved floor under bright natural daylight.', category: 'urban' }
+  { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio',image:"https://cdn.hyperreach.site/assets/real_bg/white_studio.webp" },
+  { id: 'temple-corridor', name: 'Temple Mandapam', prompt: 'Place the fully rendered model in an ancient South Indian temple corridor with carved granite pillars. Warm,Spiritual and historic atmosphere.', category: 'heritage',image:"https://cdn.hyperreach.site/assets/real_bg/temple_mandapam.webp"},
+  { id: 'outside-mylapore', name: 'Outside Mylapore Temple', prompt: 'Place the model on the vibrant street outside Kapaleeshwarar Temple, Mylapore. The towering, colorful Gopuram is visible in the background. Natural daylight with the hustle and bustle of a traditional Chennai street.', category: 'heritage',image:"https://cdn.hyperreach.site/assets/real_bg/outside_mylapore_temple.webp" },
+  { id: 'kochi-cafe', name: 'Kochi Heritage Cafe', prompt: 'Place the model inside a rustic, high-ceilinged heritage cafe in Fort Kochi. Features include wooden rafters, colonial-style windows, tropical plants, and a relaxed, aesthetic atmosphere.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/kochi_heritage_cafe.webp"},
+  { id: 'indiranagar-street', name: 'Indiranagar Street, Bangalore', prompt: 'Place the model on a beautiful tree-lined street in Indiranagar, Bangalore. Upscale urban setting with lush green canopies, modern storefronts, and a clean city vibe.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/indiranagar_street_banglore.webp"},
+  { id: 'pondicherry-french', name: 'French Colony, Pondicherry', prompt: 'Place the model on a street in the White Town area of Pondicherry. Iconic bright yellow colonial buildings with white trim, bougainvillea flowers spilling over walls, and a clean, European-Indian hybrid aesthetic.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/french_colony_pondicherry.webp"},
+  { id: 'marine-drive-beach', name: 'Mumbai Marine Drive', prompt: "Place the model on the promenade of Marine Drive, Mumbai. The Arabian Sea and the iconic tetrapods are in view, with the Queen's Necklace skyline visible in the distance during a breezy evening.", category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/mumbai_marine_drive.webp"},
+  { id: 'chennai-central', name: 'Chennai Central Station', prompt: 'Place the model in front of the iconic red brick heritage building of Chennai Central Railway Station. Grand architectural background with Victorian-Gothic details and a sense of historic travel.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/chennai_central.webp"},
+  { id: 'chettinad-wall', name: 'Chettinad Sunlit Wall', prompt: 'Place the fully rendered model against a warm, textured yellow plaster wall typical of a Chettinad house in Tamil Nadu, with dramatic natural shadows cast by coconut palm leaves.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/chettinad_wall.webp"},
+  { id: 'red-oxide-floor', name: 'Red Oxide Veranda', prompt: 'Place the fully rendered model standing on a traditional red oxide floor in a semi-open veranda, with antique wooden pillars.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/red_oxide_floor.webp"},
+  { id: 'kerala-backwaters', name: 'Kerala Backwaters', prompt: 'Place the fully rendered model on the wooden deck of a traditional houseboat in Alappuzha, Kerala.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/kerala_backwaters.webp"},
+  { id: 'mahabalipuram-shore', name: 'Mahabalipuram Shore', prompt: 'Place the fully rendered model on the sandy beach near the Shore Temple in Mahabalipuram, Tamil Nadu.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/mahabalipuram_shore.webp"},
+  { id: 'ooty-tea-garden', name: 'Ooty Tea Garden', prompt: 'Place the fully rendered model standing on a narrow pathway in a lush green tea estate in Ooty/Nilgiris.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/ooty_tea_garden.webp"},
+  { id: 'chettinad-courtyard', name: 'Chettinad Courtyard', prompt: 'Place the fully rendered model in the central courtyard of a traditional Chettinad mansion.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/chettinad_courtyard.webp"},
+  { id: 'royal-crimson', name: 'Royal Crimson Studio', prompt: 'A deep crimson textured plaster wall with a subtle floral leaf pattern. A heavy golden-mustard silk curtain drapes on the right. Features a vintage ornate velvet chair with a floral bouquet, antique candelabras, and a classic Persian rug.', category: 'studio',image:"https://cdn.hyperreach.site/assets/real_bg/royal_crimson.webp" },
+  { id: 'mughal-heritage', name: 'Mughal Heritage Arch', prompt: 'A grand Mughal-style interior with light sandstone walls, intricate arch carvings, and delicate floral murals. Includes a vintage wooden side table with a brass candle stand under soft, diffused morning sunlight.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/mughal_heritage.webp"},
+  { id: 'rustic-orange', name: 'Rustic Boho Orange', prompt: 'A vibrant, rustic orange-textured wall with an earthy feel. A dark wood carved jali room divider is on the left, and simple wooden shelves with antique pottery and vases are on the right. Features a classic red patterned rug.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/rustic_orange.webp"},
+  { id: 'earthy-minimalist', name: 'Earthy Minimalist', prompt: 'A clean, minimalist studio background in warm tan/terracotta. Includes a lush palm plant, a woven vase with dried pampas grass, and natural woven floor mats under soft organic lighting.', category: 'studio' ,image:"https://cdn.hyperreach.site/assets/real_bg/earthy_minimalist.webp"},
+  { id: 'turquoise-palace', name: 'Grand Turquoise Hall', prompt: 'A majestic palace hall with turquoise patterned wallpaper and white ornate Victorian arches. Includes a dark carved wooden console table with a flower vase and intricate blue-and-white patterned floor tiles.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/turquoise_palace.webp"},
+  { id: 'floral-arbour', name: 'Wedding Floral Arbour', prompt: 'A festive backdrop with cream leaf-patterned wallpaper, framed by a lush arch of white and peach roses and greenery. Features hanging crystal beaded globes and a vibrant green grass floor.', category: 'wedding' ,image:"https://cdn.hyperreach.site/assets/real_bg/floral_arbour.webp"},
+  { id: 'modern-stripes', name: 'Modern Urban Stripes', prompt: 'A contemporary urban background with vertical red, green, and blue stripes. A large green palm leaf overlaps the composition on the left. Features a clean concrete-paved floor under bright natural daylight.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/modern_stripes.webp"}
 ];
+  
 
 export const BACKGROUND_OPTIONS_KIDS: BackgroundOption[] = [
-  { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio' },
-  { id: 'temple-corridor', name: 'Temple Mandapam', prompt: 'Place the fully rendered model in an ancient South Indian temple corridor with carved granite pillars. Warm,Spiritual and historic atmosphere.', category: 'heritage' },
-  { id: 'outside-mylapore', name: 'Outside Mylapore Temple', prompt: 'Place the model on the vibrant street outside Kapaleeshwarar Temple, Mylapore. The towering, colorful Gopuram is visible in the background. Natural daylight with the hustle and bustle of a traditional Chennai street.', category: 'heritage' },
-  { id: 'kochi-cafe', name: 'Kochi Heritage Cafe', prompt: 'Place the model inside a rustic, high-ceilinged heritage cafe in Fort Kochi. Features include wooden rafters, colonial-style windows, tropical plants, and a relaxed, aesthetic atmosphere.', category: 'urban' },
-  { id: 'indiranagar-street', name: 'Indiranagar Street, Bangalore', prompt: 'Place the model on a beautiful tree-lined street in Indiranagar, Bangalore. Upscale urban setting with lush green canopies, modern storefronts, and a clean city vibe.', category: 'urban' },
-  { id: 'pondicherry-french', name: 'French Colony, Pondicherry', prompt: 'Place the model on a street in the White Town area of Pondicherry. Iconic bright yellow colonial buildings with white trim, bougainvillea flowers spilling over walls, and a clean, European-Indian hybrid aesthetic.', category: 'urban' },
-  { id: 'marine-drive-beach', name: 'Mumbai Marine Drive', prompt: "Place the model on the promenade of Marine Drive, Mumbai. The Arabian Sea and the iconic tetrapods are in view, with the Queen's Necklace skyline visible in the distance during a breezy evening.", category: 'urban' },
-  { id: 'chennai-central', name: 'Chennai Central Station', prompt: 'Place the model in front of the iconic red brick heritage building of Chennai Central Railway Station. Grand architectural background with Victorian-Gothic details and a sense of historic travel.', category: 'heritage' },
-  { id: 'chettinad-wall', name: 'Chettinad Sunlit Wall', prompt: 'Place the fully rendered model against a warm, textured yellow plaster wall typical of a Chettinad house in Tamil Nadu, with dramatic natural shadows cast by coconut palm leaves.', category: 'traditional' },
-  { id: 'red-oxide-floor', name: 'Red Oxide Veranda', prompt: 'Place the fully rendered model standing on a traditional red oxide floor in a semi-open veranda, with antique wooden pillars.', category: 'traditional' },
-  { id: 'kerala-backwaters', name: 'Kerala Backwaters', prompt: 'Place the fully rendered model on the wooden deck of a traditional houseboat in Alappuzha, Kerala.', category: 'nature' },
-  { id: 'mahabalipuram-shore', name: 'Mahabalipuram Shore', prompt: 'Place the fully rendered model on the sandy beach near the Shore Temple in Mahabalipuram, Tamil Nadu.', category: 'nature' },
-  { id: 'ooty-tea-garden', name: 'Ooty Tea Garden', prompt: 'Place the fully rendered model standing on a narrow pathway in a lush green tea estate in Ooty/Nilgiris.', category: 'nature' },
-  { id: 'chettinad-courtyard', name: 'Chettinad Courtyard', prompt: 'Place the fully rendered model in the central courtyard of a traditional Chettinad mansion.', category: 'traditional' },
-  { id: 'royal-crimson', name: 'Royal Crimson Studio', prompt: 'A deep crimson textured plaster wall with a subtle floral leaf pattern. A heavy golden-mustard silk curtain drapes on the right. Features a vintage ornate velvet chair with a floral bouquet, antique candelabras, and a classic Persian rug.', category: 'studio' },
-  { id: 'mughal-heritage', name: 'Mughal Heritage Arch', prompt: 'A grand Mughal-style interior with light sandstone walls, intricate arch carvings, and delicate floral murals. Includes a vintage wooden side table with a brass candle stand under soft, diffused morning sunlight.', category: 'heritage' },
-  { id: 'rustic-orange', name: 'Rustic Boho Orange', prompt: 'A vibrant, rustic orange-textured wall with an earthy feel. A dark wood carved jali room divider is on the left, and simple wooden shelves with antique pottery and vases are on the right. Features a classic red patterned rug.', category: 'traditional' },
-  { id: 'earthy-minimalist', name: 'Earthy Minimalist', prompt: 'A clean, minimalist studio background in warm tan/terracotta. Includes a lush palm plant, a woven vase with dried pampas grass, and natural woven floor mats under soft organic lighting.', category: 'studio' },
-  { id: 'turquoise-palace', name: 'Grand Turquoise Hall', prompt: 'A majestic palace hall with turquoise patterned wallpaper and white ornate Victorian arches. Includes a dark carved wooden console table with a flower vase and intricate blue-and-white patterned floor tiles.', category: 'heritage' },
-  { id: 'floral-arbour', name: 'Wedding Floral Arbour', prompt: 'A festive backdrop with cream leaf-patterned wallpaper, framed by a lush arch of white and peach roses and greenery. Features hanging crystal beaded globes and a vibrant green grass floor.', category: 'wedding' },
-  { id: 'modern-stripes', name: 'Modern Urban Stripes', prompt: 'A contemporary urban background with vertical red, green, and blue stripes. A large green palm leaf overlaps the composition on the left. Features a clean concrete-paved floor under bright natural daylight.', category: 'urban' },
-  { id: 'kids-teddy-wood', name: 'Cozy Teddy Wood', prompt: 'A cozy studio setting with dark brown horizontal wooden planks as a backdrop. Heart-shaped felt bunting in golden-tan hangs across the wall. A soft shaggy cream rug covers the floor. A brown plush teddy bear with an orange scarf sits on the floor.', category: 'studio' },
-  { id: 'kids-boho-nursery', name: 'Boho Nursery', prompt: 'A bright, airy white studio with a minimalist boho nursery aesthetic. Features a rattan child-sized armchair in the center. A wooden ladder with a small heart ornament leans against the white wall. A white plush bunny sits on a small wooden stool. Includes dried pampas grass and a toy wooden cart.', category: 'studio' },
-  { id: 'minimal-alcoves', name: 'Arched Alcoves', prompt: 'A sophisticated minimalist background with a textured off-white wall. Features five recessed arched alcoves of varying sizes, softly illuminated from within. Each alcove contains a simple earthy ceramic pot or vase. Light wood flooring.', category: 'studio' },
-  { id: 'minimal-floral-studio', name: 'Minimal Floral', prompt: 'An ultra-clean, minimalist white studio background. Two elegant ceramic vases containing soft pink, yellow, and purple flowers are positioned at the bottom corners, framing the center. Soft, diffused lighting.', category: 'studio' },
-  { id: 'kids-palm-curtain', name: 'Palm & Stool Studio', prompt: "A professional children's photography studio with a soft beige fabric curtain backdrop. A plush velvet beige stool sits on a circular woven jute rug. A green palm frond enters the frame from the right, adding a fresh, natural aesthetic. Bright, soft studio lighting.", category: 'studio' },
-  { id: 'kids-lemon-studio', name: 'Lemon Blossom Studio', prompt: 'A clean, high-key white studio background. Features a tall rustic wooden bar-style stool. Next to it sits a large wicker basket overflowing with vibrant yellow flowers and fresh greenery. Natural, warm daylight atmosphere.', category: 'studio' },
-  { id: 'kids-classic-panel', name: 'Classic Paneled Room', prompt: 'An elegant interior with white-painted wall molding and decorative panels. A textured wicker or jute rug covers the floor. The space feels premium and bright, suitable for high-end fashion catalog photography.', category: 'studio' },
-  { id: 'kids-solid-blue', name: 'Solid Sky Blue', prompt: 'A clean, solid vibrant sky blue studio cyclorama background. Perfect for modern, energetic fashion shots with minimal distractions and even, shadowless lighting.', category: 'studio' }
+  { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio',image:"https://cdn.hyperreach.site/assets/real_bg/white_studio.webp" },
+  { id: 'temple-corridor', name: 'Temple Mandapam', prompt: 'Place the fully rendered model in an ancient South Indian temple corridor with carved granite pillars. Warm,Spiritual and historic atmosphere.', category: 'heritage',image:"https://cdn.hyperreach.site/assets/real_bg/temple_mandapam.webp"},
+  { id: 'outside-mylapore', name: 'Outside Mylapore Temple', prompt: 'Place the model on the vibrant street outside Kapaleeshwarar Temple, Mylapore. The towering, colorful Gopuram is visible in the background. Natural daylight with the hustle and bustle of a traditional Chennai street.', category: 'heritage',image:"https://cdn.hyperreach.site/assets/real_bg/outside_mylapore_temple.webp" },
+  { id: 'kochi-cafe', name: 'Kochi Heritage Cafe', prompt: 'Place the model inside a rustic, high-ceilinged heritage cafe in Fort Kochi. Features include wooden rafters, colonial-style windows, tropical plants, and a relaxed, aesthetic atmosphere.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/kochi_heritage_cafe.webp"},
+  { id: 'indiranagar-street', name: 'Indiranagar Street, Bangalore', prompt: 'Place the model on a beautiful tree-lined street in Indiranagar, Bangalore. Upscale urban setting with lush green canopies, modern storefronts, and a clean city vibe.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/indiranagar_street_banglore.webp"},
+  { id: 'pondicherry-french', name: 'French Colony, Pondicherry', prompt: 'Place the model on a street in the White Town area of Pondicherry. Iconic bright yellow colonial buildings with white trim, bougainvillea flowers spilling over walls, and a clean, European-Indian hybrid aesthetic.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/french_colony_pondicherry.webp"},
+  { id: 'marine-drive-beach', name: 'Mumbai Marine Drive', prompt: "Place the model on the promenade of Marine Drive, Mumbai. The Arabian Sea and the iconic tetrapods are in view, with the Queen's Necklace skyline visible in the distance during a breezy evening.", category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/mumbai_marine_drive.webp"},
+  { id: 'chennai-central', name: 'Chennai Central Station', prompt: 'Place the model in front of the iconic red brick heritage building of Chennai Central Railway Station. Grand architectural background with Victorian-Gothic details and a sense of historic travel.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/chennai_central.webp"},
+  { id: 'chettinad-wall', name: 'Chettinad Sunlit Wall', prompt: 'Place the fully rendered model against a warm, textured yellow plaster wall typical of a Chettinad house in Tamil Nadu, with dramatic natural shadows cast by coconut palm leaves.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/chettinad_wall.webp"},
+  { id: 'red-oxide-floor', name: 'Red Oxide Veranda', prompt: 'Place the fully rendered model standing on a traditional red oxide floor in a semi-open veranda, with antique wooden pillars.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/red_oxide_floor.webp"},
+  { id: 'kerala-backwaters', name: 'Kerala Backwaters', prompt: 'Place the fully rendered model on the wooden deck of a traditional houseboat in Alappuzha, Kerala.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/kerala_backwaters.webp"},
+  { id: 'mahabalipuram-shore', name: 'Mahabalipuram Shore', prompt: 'Place the fully rendered model on the sandy beach near the Shore Temple in Mahabalipuram, Tamil Nadu.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/mahabalipuram_shore.webp"},
+  { id: 'ooty-tea-garden', name: 'Ooty Tea Garden', prompt: 'Place the fully rendered model standing on a narrow pathway in a lush green tea estate in Ooty/Nilgiris.', category: 'nature' ,image:"https://cdn.hyperreach.site/assets/real_bg/ooty_tea_garden.webp"},
+  { id: 'chettinad-courtyard', name: 'Chettinad Courtyard', prompt: 'Place the fully rendered model in the central courtyard of a traditional Chettinad mansion.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/chettinad_courtyard.webp"},
+  { id: 'royal-crimson', name: 'Royal Crimson Studio', prompt: 'A deep crimson textured plaster wall with a subtle floral leaf pattern. A heavy golden-mustard silk curtain drapes on the right. Features a vintage ornate velvet chair with a floral bouquet, antique candelabras, and a classic Persian rug.', category: 'studio',image:"https://cdn.hyperreach.site/assets/real_bg/royal_crimson.webp" },
+  { id: 'mughal-heritage', name: 'Mughal Heritage Arch', prompt: 'A grand Mughal-style interior with light sandstone walls, intricate arch carvings, and delicate floral murals. Includes a vintage wooden side table with a brass candle stand under soft, diffused morning sunlight.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/mughal_heritage.webp"},
+  { id: 'rustic-orange', name: 'Rustic Boho Orange', prompt: 'A vibrant, rustic orange-textured wall with an earthy feel. A dark wood carved jali room divider is on the left, and simple wooden shelves with antique pottery and vases are on the right. Features a classic red patterned rug.', category: 'traditional' ,image:"https://cdn.hyperreach.site/assets/real_bg/rustic_orange.webp"},
+  { id: 'earthy-minimalist', name: 'Earthy Minimalist', prompt: 'A clean, minimalist studio background in warm tan/terracotta. Includes a lush palm plant, a woven vase with dried pampas grass, and natural woven floor mats under soft organic lighting.', category: 'studio' ,image:"https://cdn.hyperreach.site/assets/real_bg/earthy_minimalist.webp"},
+  { id: 'turquoise-palace', name: 'Grand Turquoise Hall', prompt: 'A majestic palace hall with turquoise patterned wallpaper and white ornate Victorian arches. Includes a dark carved wooden console table with a flower vase and intricate blue-and-white patterned floor tiles.', category: 'heritage' ,image:"https://cdn.hyperreach.site/assets/real_bg/turquoise_palace.webp"},
+  { id: 'floral-arbour', name: 'Wedding Floral Arbour', prompt: 'A festive backdrop with cream leaf-patterned wallpaper, framed by a lush arch of white and peach roses and greenery. Features hanging crystal beaded globes and a vibrant green grass floor.', category: 'wedding' ,image:"https://cdn.hyperreach.site/assets/real_bg/floral_arbour.webp"},
+  { id: 'modern-stripes', name: 'Modern Urban Stripes', prompt: 'A contemporary urban background with vertical red, green, and blue stripes. A large green palm leaf overlaps the composition on the left. Features a clean concrete-paved floor under bright natural daylight.', category: 'urban' ,image:"https://cdn.hyperreach.site/assets/real_bg/modern_stripes.webp"}
 ];
+  
 
 export const BACKGROUND_OPTIONS_JEWELLERY: BackgroundOption[] = [
   { id: 'white-studio', name: 'White Studio', prompt: 'Place the fully rendered model on a clean, solid, studio-quality white background (#FFFFFF). Soft, even lighting.', category: 'studio' },
@@ -342,7 +337,7 @@ export const WOMEN_CATEGORIES: { id: WomenProductCategory; name: string }[] = [
   { id: 'western', name: 'Western Dress' },
   { id: 'traditional', name: 'Traditional' },
   { id: 'streetwear', name: 'Streetwear' },
-  { id: 'formals', name: 'Formals' },
+  { id: 'formals', name: 'Formals' }, 
 ];
 
 export const MEN_CATEGORIES: { id: MenProductCategory; name: string }[] = [
@@ -396,52 +391,52 @@ export const ATTIRE_OPTIONS: AttireOption[] = [
 
 // Hair Style Options
 export const HAIR_STYLE_OPTIONS_WOMEN: HairStyleOption[] = [
-  { id: 'bun', name: 'Bun', prompt: 'black hair styled into a neat, professional bun' },
-  { id: 'long-wavy', name: 'Long Wavy', prompt: 'long black flowing wavy hair with natural volume' },
-  { id: 'french-braid', name: 'French Braid', prompt: 'black hair elegantly styled into a French braid' },
-  { id: 'fishtail-braid', name: 'Fishtail Braid', prompt: 'black hair intricately styled into a fishtail braid' },
-  { id: 'chignon', name: 'Chignon', prompt: 'black hair in sophisticated low chignon knot' },
-  { id: 'pony-tail', name: 'Pony Tail', prompt: 'black hair in high, sleek pony tail' },
-  { id: 'short-bob', name: 'Short Bob', prompt: 'black hair classic short bob cut' },
-  { id: 'layered-cut', name: 'Layered Cut', prompt: 'black hair in modern layered haircut' },
-  { id: 'messy-bun', name: 'Messy Bun', prompt: 'black hair in relaxed, stylish messy bun' },
+  { id: 'bun', name: 'Bun', prompt: 'black hair styled into a neat, professional bun',image:"https://cdn.hyperreach.site/assets/women-hair/bun.webp" },
+  { id: 'long-wavy', name: 'Long Wavy', prompt: 'long black flowing wavy hair with natural volume' ,image:"https://cdn.hyperreach.site/assets/women-hair/long-wavy.webp"},
+  { id: 'french-braid', name: 'French Braid', prompt: 'black hair elegantly styled into a French braid' ,image:"https://cdn.hyperreach.site/assets/women-hair/french-braid.webp"},
+  { id: 'fishtail-braid', name: 'Fishtail Braid', prompt: 'black hair intricately styled into a fishtail braid' ,image:"https://cdn.hyperreach.site/assets/women-hair/fishtail-braid.webp"},
+  { id: 'chignon', name: 'Chignon', prompt: 'black hair in sophisticated low chignon knot' ,image:"https://cdn.hyperreach.site/assets/women-hair/chignon.webp"},
+  { id: 'pony-tail', name: 'Pony Tail', prompt: 'black hair in high, sleek pony tail' ,image:"https://cdn.hyperreach.site/assets/women-hair/pony.webp"},
+  { id: 'short-bob', name: 'Short Bob', prompt: 'black hair classic short bob cut' ,image:"https://cdn.hyperreach.site/assets/women-hair/short-bob.webp"},
+  { id: 'layered-cut', name: 'Layered Cut', prompt: 'black hair in modern layered haircut' ,image:"https://cdn.hyperreach.site/assets/women-hair/layered.webp"},
+  { id: 'messy-bun', name: 'Messy Bun', prompt: 'black hair in relaxed, stylish messy bun' ,image:"https://cdn.hyperreach.site/assets/women-hair/messy.webp"},
 ];
 
 export const HAIR_STYLE_OPTIONS_MEN: HairStyleOption[] = [
-  { id: 'french-crop', name: 'French Crop', prompt: 'modern French crop with short sides and textured top' },
-  { id: 'short-pompadour', name: 'Pompadour', prompt: 'short pompadour with volume' },
-  { id: 'classic-quiff', name: 'Classic Quiff', prompt: 'classic quiff hairstyle' },
-  { id: 'textured-crop', name: 'Textured Crop', prompt: 'short textured crop' },
-  { id: 'buzz-twist', name: 'Buzz Twist', prompt: 'buzz cut with a stylish twist' },
-  { id: 'buzz-fade', name: 'Buzz Fade', prompt: 'buzz cut with a clean skin fade' },
-  { id: 'slick-fade', name: 'Slick Fade', prompt: 'slicked back hair with a fade' },
-  { id: 'natural-fade', name: 'Natural Fade', prompt: 'natural fade haircut' },
-  { id: 'curly-fade', name: 'Curly Taper Fade', prompt: 'curly hair with a taper fade' },
-  { id: 'curly-fringe', name: 'Curly Fringe', prompt: 'curly hair styled with a fringe' },
-  { id: 'comb-over', name: 'Comb-Over', prompt: 'classic comb-over' },
-  { id: 'taper-combover', name: 'Taper Combover', prompt: 'taper faded combover' },
-  { id: 'bro-flow', name: 'Bro Flow', prompt: 'long hair in a "bro flow" style' },
-  { id: 'side-swept', name: 'Side-Swept', prompt: 'medium side-swept hairstyle' },
+  { id: 'french-crop', name: 'French Crop', prompt: 'modern French crop with short sides and textured top',image:"https://cdn.hyperreach.site/assets/men-hair/french.webp"},
+  { id: 'short-pompadour', name: 'Pompadour', prompt: 'short pompadour with volume' ,image:"https://cdn.hyperreach.site/assets/men-hair/pompadour.webp"},
+  { id: 'classic-quiff', name: 'Classic Quiff', prompt: 'classic quiff hairstyle' ,image:"https://cdn.hyperreach.site/assets/men-hair/classic-quiff.webp"},
+  { id: 'textured-crop', name: 'Textured Crop', prompt: 'short textured crop' ,image:"https://cdn.hyperreach.site/assets/men-hair/textured.webp"},
+  { id: 'buzz-twist', name: 'Buzz Twist', prompt: 'buzz cut with a stylish twist',image:"https://cdn.hyperreach.site/assets/men-hair/buzz-twist.webp" },
+  { id: 'buzz-fade', name: 'Buzz Fade', prompt: 'buzz cut with a clean skin fade' ,image:"https://cdn.hyperreach.site/assets/men-hair/buzz-fade.webp"},
+  { id: 'slick-fade', name: 'Slick Fade', prompt: 'slicked back hair with a fade' ,image:"https://cdn.hyperreach.site/assets/men-hair/slick-fade.webp"},
+  { id: 'natural-fade', name: 'Natural Fade', prompt: 'natural fade haircut' ,image:"https://cdn.hyperreach.site/assets/men-hair/natural-fade.webp"},
+  { id: 'curly-fade', name: 'Curly Taper Fade', prompt: 'curly hair with a taper fade' ,image:"https://cdn.hyperreach.site/assets/men-hair/curly-trapper.webp"},
+  { id: 'curly-fringe', name: 'Curly Fringe', prompt: 'curly hair styled with a fringe' ,image:"https://cdn.hyperreach.site/assets/men-hair/curly-finge.webp"},
+  { id: 'comb-over', name: 'Comb-Over', prompt: 'classic comb-over' ,image:"https://cdn.hyperreach.site/assets/men-hair/comb-over.webp"},
+  { id: 'taper-combover', name: 'Taper Combover', prompt: 'taper faded combover' ,image:"https://cdn.hyperreach.site/assets/men-hair/trapper-comb.webp"},
+  { id: 'bro-flow', name: 'Bro Flow', prompt: 'long hair in a "bro flow" style' ,image:"https://cdn.hyperreach.site/assets/men-hair/bro.webp"},
+  { id: 'side-swept', name: 'Side-Swept', prompt: 'medium side-swept hairstyle' ,image:"https://cdn.hyperreach.site/assets/men-hair/side-swept.webp"},
 ];
 
 export const HAIR_STYLE_OPTIONS_KIDS_BOY: HairStyleOption[] = [
-  { id: 'caesar', name: 'Caesar Cut', prompt: 'short Caesar cut with straight fringe' },
-  { id: 'textured-crop', name: 'Textured Crop', prompt: 'short textured crop for kids' },
-  { id: 'faux-hawk', name: 'Faux Hawk', prompt: 'playful faux hawk hairstyle' },
-  { id: 'crew-cut', name: 'Crew Cut', prompt: 'classic neat crew cut' },
-  { id: 'side-part', name: 'Side Part', prompt: 'tidy side part hairstyle' },
-  { id: 'taper-fade', name: 'Taper Fade', prompt: 'clean taper fade' },
-  { id: 'low-fade', name: 'Low Fade', prompt: 'low skin fade' },
-  { id: 'high-fade', name: 'High Fade', prompt: 'high skin fade' },
+  { id: 'caesar', name: 'Caesar Cut', prompt: 'short Caesar cut with straight fringe',image:"https://cdn.hyperreach.site/assets/kid-boy-hair/ceasar.webp"},
+  { id: 'textured-crop', name: 'Textured Crop', prompt: 'short textured crop for kids' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/textured.webp"},
+  { id: 'faux-hawk', name: 'Faux Hawk', prompt: 'playful faux hawk hairstyle' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/faux.webp"},
+  { id: 'crew-cut', name: 'Crew Cut', prompt: 'classic neat crew cut' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/crew.webp"},
+  { id: 'side-part', name: 'Side Part', prompt: 'tidy side part hairstyle' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/side.webp"},
+  { id: 'taper-fade', name: 'Taper Fade', prompt: 'clean taper fade' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/traper-fade.webp"},
+  { id: 'low-fade', name: 'Low Fade', prompt: 'low skin fade' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/low-fade.webp"},
+  { id: 'high-fade', name: 'High Fade', prompt: 'high skin fade' ,image:"https://cdn.hyperreach.site/assets/kid-boy-hair/high-fade.webp"},
 ];
 
 export const HAIR_STYLE_OPTIONS_KIDS_GIRL: HairStyleOption[] = [
-  { id: 'crew-cut', name: 'Crew Cut', prompt: 'short hair on top with even shorter sides' },
-  { id: 'caesar', name: 'Caesar Cut', prompt: 'short haircut with a small straight fringe' },
-  { id: 'ivy-league', name: 'Ivy League', prompt: 'neat short haircut styled to the side' },
-  { id: 'comb-over', name: 'Comb Over', prompt: 'hair combed neatly to one side' },
-  { id: 'spiky', name: 'Spiky', prompt: 'short spiky hair' },
-  { id: 'flat-top', name: 'Flat Top', prompt: 'classic flat top cut' },
+  { id: 'crew-cut', name: 'Crew Cut', prompt: 'short hair on top with even shorter sides',image:"https://cdn.hyperreach.site/assets/kid-girl-hair/crew.webp" },
+  { id: 'caesar', name: 'Caesar Cut', prompt: 'short haircut with a small straight fringe',image:"https://cdn.hyperreach.site/assets/kid-girl-hair/ceasar.webp" },
+  { id: 'ivy-league', name: 'Ivy League', prompt: 'neat short haircut styled to the side' ,image:"https://cdn.hyperreach.site/assets/kid-girl-hair/ivy.webp"},
+  { id: 'comb-over', name: 'Comb Over', prompt: 'hair combed neatly to one side' ,image:"https://cdn.hyperreach.site/assets/kid-girl-hair/comb.webp"},
+  { id: 'spiky', name: 'Spiky', prompt: 'short spiky hair' ,image:"https://cdn.hyperreach.site/assets/kid-girl-hair/spiky.webp"},
+  { id: 'flat-top', name: 'Flat Top', prompt: 'classic flat top cut',image:"https://cdn.hyperreach.site/assets/kid-girl-hair/flat.webp" },
 ];
 
 export const FIT_TYPE_OPTIONS: FitTypeOption[] = [
@@ -643,12 +638,12 @@ export const POSE_OPTIONS_MEN: PoseOption[] = [
   { id: 'lean-chair', name: 'Lean on Chair', prompt: 'relaxed leaning posture against a studio chair', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/lean_on_chair.webp' },
   { id: 'casual-lean', name: 'Lean on Wall', prompt: 'relaxed leaning posture against a solid wall', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/lean_on_wall.webp' },
   { id: 'lean-on-table', name: 'Lean on Table', prompt: 'leaning forward against a wooden table', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/lean_on_table.webp' },
-  { id: 'lean-back', name: 'Lean Back', prompt: 'leaning back against a flat surface', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/lean_at_back.webp' },
+  { id: 'lean-back', name: 'Lean Back', prompt: 'leaning back against a flat surface', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/look_at_back.webp'},
   { id: 'side-lean', name: 'Side Lean', prompt: 'leaning sideways against a pillar or wall', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/side_lean.webp' },
   { id: 'lean-rail', name: 'Lean on Railing', prompt: 'leaning against a balcony or veranda railing', category: 'leaning',image:'https://cdn.hyperreach.site/assets/men_pose/lean_on_railing.webp' },
   { id: 'walking-motion', name: 'Walk Forward', prompt: 'captured mid-stride walking towards the camera', category: 'movement',image:'https://cdn.hyperreach.site/assets/men_pose/walk_forward.webp' },
   { id: 'dynamic-stride', name: 'Runway Step', prompt: 'large confident stride forward', category: 'movement',image:'https://cdn.hyperreach.site/assets/men_pose/runway_step.webp' },
-  { id: 'twirling', name: 'Graceful Twirl', prompt: 'motion-blur stabilized twirl, garment flared out', category: 'movement',image:'https://cdn.hyperreach.site/assets/men_pose/G raceful_twirl.webp' },
+  { id: 'twirling', name: 'Graceful Twirl', prompt: 'motion-blur stabilized twirl, garment flared out', category: 'movement',image:'https://cdn.hyperreach.site/assets/men_pose/Graceful_twirl.webp' },
   { id: 'sitting-chair', name: 'Sit on Chair', prompt: 'sitting upright on a minimalist chair', category: 'sitting',image:'https://cdn.hyperreach.site/assets/men_pose/sit_on_chair.webp' },
   { id: 'sitting-floor', name: 'Sit on Floor', prompt: 'relaxed floor-sitting pose', category: 'sitting',image:'https://cdn.hyperreach.site/assets/men_pose/sit_on_floor.webp' },
   { id: 'speaking-mobile', name: 'Talk on Phone', prompt: 'candid lifestyle shot holding a smartphone to the ear', category: 'lifestyle',image:'https://cdn.hyperreach.site/assets/men_pose/talk_on_phone.webp' },
@@ -661,29 +656,29 @@ export const POSE_OPTIONS_KIDS: PoseOption[] = [
   { id: 'standing-neutral', name: 'Stand Straight', prompt: 'standing in a graceful, forward-facing model posture', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/standing_straight.webp' },
   { id: 'hands-on-hips', name: 'Hands on Waist', prompt: 'empowered stance with both hands placed firmly on hips', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/hands_on_waist.webp' },
   { id: 'crossed-arms', name: 'Bold Arms Crossed', prompt: 'authoritative stance with arms crossed naturally', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/bold_arm_crossed.webp' },
-  { id: 'one-hand-pocket', name: 'Hand in Pocket', prompt: 'modern standing posture with one hand tucked casually into a pocket', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/one_hand_pocket.webp' },
-  { id: 'both-hands-pockets', name: 'Hands in Pockets', prompt: 'casual standing stance with both hands deep in pockets', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/both_hands_pockets.webp' },
-  { id: 'fashion-stance', name: 'Model Pose', prompt: 'sophisticated high-fashion stance, body angled at 45 degrees', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/model_pose.webp' },
-  { id: 'looking-down', name: 'Look Down', prompt: 'standing pose with head tilted down', category: 'standing' },
-  { id: 'lean-chair', name: 'Lean on Chair', prompt: 'relaxed leaning posture against a studio chair', category: 'leaning' },
-  { id: 'casual-lean', name: 'Lean on Wall', prompt: 'relaxed leaning posture against a solid wall', category: 'leaning' },
-  { id: 'lean-on-table', name: 'Lean on Table', prompt: 'leaning forward against a wooden table', category: 'leaning' },
-  { id: 'lean-back', name: 'Lean Back', prompt: 'leaning back against a flat surface', category: 'leaning' },
-  { id: 'side-lean', name: 'Side Lean', prompt: 'leaning sideways against a pillar or wall', category: 'leaning' },
-  { id: 'lean-rail', name: 'Lean on Railing', prompt: 'leaning against a balcony or veranda railing', category: 'leaning' },
-  { id: 'walking-motion', name: 'Walk Forward', prompt: 'captured mid-stride walking towards the camera', category: 'movement' },
-  { id: 'dynamic-stride', name: 'Runway Step', prompt: 'large confident stride forward', category: 'movement' },
-  { id: 'twirling', name: 'Graceful Twirl', prompt: 'motion-blur stabilized twirl, garment flared out', category: 'movement' },
-  { id: 'sitting-chair', name: 'Sit on Chair', prompt: 'sitting upright on a minimalist chair', category: 'sitting' },
-  { id: 'sitting-floor', name: 'Sit on Floor', prompt: 'relaxed floor-sitting pose', category: 'sitting' },
-  { id: 'speaking-mobile', name: 'Talk on Phone', prompt: 'candid lifestyle shot holding a smartphone to the ear', category: 'lifestyle' },
-  { id: 'watching-mobile', name: 'Look at Phone', prompt: 'natural pose looking down at a mobile screen', category: 'lifestyle' },
-  { id: 'looking-back', name: 'Look Back', prompt: 'body facing away but head turned back over the shoulder', category: 'artistic' },
-  { id: 'adjusting-hair', name: 'Fix Hair', prompt: 'artistic candid pose with one hand gently tucked behind the ear', category: 'artistic' },
+  { id: 'one-hand-pocket', name: 'Hand in Pocket', prompt: 'modern standing posture with one hand tucked casually into a pocket', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/hand_in_pocket.webp' },
+  { id: 'both-hands-pockets', name: 'Hands in Pockets', prompt: 'casual standing stance with both hands deep in pockets', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/hands_in_pockets.webp' },
+  { id: 'fashion-stance', name: 'Model Pose', prompt: 'sophisticated high-fashion stance, body angled at 45 degrees', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/Model_pose.webp' },
+  { id: 'looking-down', name: 'Look Down', prompt: 'standing pose with head tilted down', category: 'standing', image:'https://cdn.hyperreach.site/assets/kids_pose/look_down.webp'},
+  { id: 'lean-chair', name: 'Lean on Chair', prompt: 'relaxed leaning posture against a studio chair', category: 'leaning', image:'https://cdn.hyperreach.site/assets/kids_pose/lean_on_chair.webp'},
+  { id: 'casual-lean', name: 'Lean on Wall', prompt: 'relaxed leaning posture against a solid wall', category: 'leaning' , image:'https://cdn.hyperreach.site/assets/kids_pose/lean_on_wall.webp'},
+  { id: 'lean-on-table', name: 'Lean on Table', prompt: 'leaning forward against a wooden table', category: 'leaning' , image:'https://cdn.hyperreach.site/assets/kids_pose/Lean_on_table.webp'},
+  { id: 'lean-back', name: 'Lean Back', prompt: 'leaning back against a flat surface', category: 'leaning' , image:'https://cdn.hyperreach.site/assets/kids_pose/lean_back.webp'},
+  { id: 'side-lean', name: 'Side Lean', prompt: 'leaning sideways against a pillar or wall', category: 'leaning' , image:'https://cdn.hyperreach.site/assets/kids_pose/side_lean.webp'},
+  { id: 'lean-rail', name: 'Lean on Railing', prompt: 'leaning against a balcony or veranda railing', category: 'leaning' , image:'https://cdn.hyperreach.site/assets/kids_pose/lean_on_railling.webp'},
+  { id: 'walking-motion', name: 'Walk Forward', prompt: 'captured mid-stride walking towards the camera', category: 'movement' , image:'https://cdn.hyperreach.site/assets/kids_pose/walk_forward.webp'},
+  { id: 'dynamic-stride', name: 'Runway Step', prompt: 'large confident stride forward', category: 'movement' , image:'https://cdn.hyperreach.site/assets/kids_pose/Runway_step.webp'},
+  { id: 'twirling', name: 'Graceful Twirl', prompt: 'motion-blur stabilized twirl, garment flared out', category: 'movement' , image:'https://cdn.hyperreach.site/assets/kids_pose/Graceful Twirl.webp'},
+  { id: 'sitting-chair', name: 'Sit on Chair', prompt: 'sitting upright on a minimalist chair', category: 'sitting' , image:'https://cdn.hyperreach.site/assets/kids_pose/sit_on_chair.webp'},
+  { id: 'sitting-floor', name: 'Sit on Floor', prompt: 'relaxed floor-sitting pose', category: 'sitting' , image:'https://cdn.hyperreach.site/assets/kids_pose/sit_on_floar.webp'},
+  { id: 'speaking-mobile', name: 'Talk on Phone', prompt: 'candid lifestyle shot holding a smartphone to the ear', category: 'lifestyle' , image:'https://cdn.hyperreach.site/assets/kids_pose/talk_on_phone.webp'},
+  { id: 'watching-mobile', name: 'Look at Phone', prompt: 'natural pose looking down at a mobile screen', category: 'lifestyle' , image:'https://cdn.hyperreach.site/assets/kids_pose/look_at_phone.webp'},
+  { id: 'looking-back', name: 'Look Back', prompt: 'body facing away but head turned back over the shoulder', category: 'artistic' , image:'https://cdn.hyperreach.site/assets/kids_pose/look_back.webp'},
+  { id: 'adjusting-hair', name: 'Fix Hair', prompt: 'artistic candid pose with one hand gently tucked behind the ear', category: 'artistic' , image:'https://cdn.hyperreach.site/assets/kids_pose/fix_hair.webp'},
 ];
 
 export const POSE_OPTIONS_JEWELLERY: PoseOption[] = [
-  { id: 'standing-neutral', name: 'Stand Straight', prompt: 'standing in a graceful, forward-facing model posture', category: 'standing' },
+  { id: 'standing-neutral', name: 'Stand Straight', prompt: 'standing in a graceful, forward-facing model posture', category: 'standing'},
   { id: 'hands-on-hips', name: 'Hands on Waist', prompt: 'empowered stance with both hands placed firmly on hips', category: 'standing' },
   { id: 'crossed-arms', name: 'Bold Arms Crossed', prompt: 'authoritative stance with arms crossed naturally', category: 'standing' },
   { id: 'one-hand-pocket', name: 'Hand in Pocket', prompt: 'modern standing posture with one hand tucked casually into a pocket', category: 'standing' },
@@ -730,45 +725,44 @@ export const EXPRESSION_OPTIONS: ExpressionOption[] = [
 
 // Category-specific EXPRESSION OPTIONS
 export const EXPRESSION_OPTIONS_WOMEN: ExpressionOption[] = [
-  { id: 'neutral', name: 'Calm & Poised', prompt: 'serene, calm facial expression' },
-  { id: 'subtle-smile', name: 'Warm Glow', prompt: 'a gentle, inviting smile that reaches the eyes' },
-  { id: 'confident', name: 'Piercing Gaze', prompt: 'self-assured, bold expression with a slight smirk' },
-  { id: 'serious-fashion', name: 'Editorial Intense', prompt: 'vogue-style serious expression' },
-  { id: 'playful', name: 'Joyful Laugh', prompt: 'candid laughter, eyes crinkled with joy' },
-  { id: 'candid-glance', name: 'Candid Glance', prompt: 'looking slightly away with a natural, unposed facial expression as if unaware of the camera' },
-  { id: 'surprised', name: 'Surprised Delight', prompt: 'wide-eyed, genuine expression of joyful surprise with a slight open mouth' },
-  { id: 'thoughtful', name: 'Pensive Mood', prompt: 'thoughtful, pensive expression with eyes looking slightly off-camera' },
-  { id: 'shy-smile', name: 'Bashful Glow', prompt: 'looking down with a shy, bashful, and sweet smile' },
-  { id: 'full-laughter', name: 'Vibrant Laughter', prompt: 'unrestrained, full-faced laughter with head tilted slightly back' },
-  { id: 'dreamy', name: 'Dreamy Focus', prompt: 'a soft, dreamy expression with a serene and focused gaze' },
+  { id: 'neutral', name: 'Calm & Poised', prompt: 'serene, calm facial expression', image:"https://cdn.hyperreach.site/assets/women-expression/calm.webp"},
+  { id: 'subtle-smile', name: 'Warm Glow', prompt: 'a gentle, inviting smile that reaches the eyes', image:"https://cdn.hyperreach.site/assets/women-expression/warm.webp" },
+  { id: 'confident', name: 'Piercing Gaze', prompt: 'self-assured, bold expression with a slight smirk', image:"https://cdn.hyperreach.site/assets/women-expression/piercing.webp"},
+  { id: 'serious-fashion', name: 'Editorial Intense', prompt: 'vogue-style serious expression',image:"https://cdn.hyperreach.site/assets/women-expression/editorial.webp" },
+  { id: 'playful', name: 'Joyful Laugh', prompt: 'candid laughter, eyes crinkled with joy',image:"https://cdn.hyperreach.site/assets/women-expression/joyful.webp" },
+  { id: 'surprised', name: 'Surprised Delight', prompt: 'wide-eyed, genuine expression of joyful surprise with a slight open mouth',image:"https://cdn.hyperreach.site/assets/women-expression/surprised.webp" },
+  { id: 'thoughtful', name: 'Pensive Mood', prompt: 'thoughtful, pensive expression with eyes looking slightly off-camera',image:"https://cdn.hyperreach.site/assets/women-expression/pensive.webp" },
+  { id: 'shy-smile', name: 'Bashful Glow', prompt: 'looking down with a shy, bashful, and sweet smile', image:"https://cdn.hyperreach.site/assets/women-expression/bash.webp" },
+  { id: 'full-laughter', name: 'Vibrant Laughter', prompt: 'unrestrained, full-faced laughter with head tilted slightly back',image:"https://cdn.hyperreach.site/assets/women-expression/vibrant.webp" },
+  { id: 'dreamy', name: 'Dreamy Focus', prompt: 'a soft, dreamy expression with a serene and focused gaze',image:"https://cdn.hyperreach.site/assets/women-expression/dreamy.webp"},
 ];
 
 export const EXPRESSION_OPTIONS_MEN: ExpressionOption[] = [
-  { id: 'neutral', name: 'Calm & Poised', prompt: 'serene, calm facial expression' },
-  { id: 'subtle-smile', name: 'Warm Glow', prompt: 'a gentle, inviting smile that reaches the eyes' },
-  { id: 'confident', name: 'Piercing Gaze', prompt: 'self-assured, bold expression with a slight smirk' },
-  { id: 'serious-fashion', name: 'Editorial Intense', prompt: 'vogue-style serious expression' },
-  { id: 'playful', name: 'Joyful Laugh', prompt: 'candid laughter, eyes crinkled with joy' },
-  { id: 'candid-glance', name: 'Candid Glance', prompt: 'looking slightly away with a natural, unposed facial expression as if unaware of the camera' },
-  { id: 'surprised', name: 'Surprised Delight', prompt: 'wide-eyed, genuine expression of joyful surprise with a slight open mouth' },
-  { id: 'thoughtful', name: 'Pensive Mood', prompt: 'thoughtful, pensive expression with eyes looking slightly off-camera' },
-  { id: 'shy-smile', name: 'Bashful Glow', prompt: 'looking down with a shy, bashful, and sweet smile' },
-  { id: 'full-laughter', name: 'Vibrant Laughter', prompt: 'unrestrained, full-faced laughter with head tilted slightly back' },
-  { id: 'dreamy', name: 'Dreamy Focus', prompt: 'a soft, dreamy expression with a serene and focused gaze' },
+  { id: 'neutral', name: 'Calm & Poised', prompt: 'serene, calm facial expression',image:"https://cdn.hyperreach.site/assets/men-expression/calm.webp"},
+  { id: 'subtle-smile', name: 'Warm Glow', prompt: 'a gentle, inviting smile that reaches the eyes',image:"https://cdn.hyperreach.site/assets/men-expression/warm.webp"},
+  { id: 'confident', name: 'Piercing Gaze', prompt: 'self-assured, bold expression with a slight smirk',image:"https://cdn.hyperreach.site/assets/men-expression/piercing.webp" },
+  { id: 'serious-fashion', name: 'Editorial Intense', prompt: 'vogue-style serious expression',image:"https://cdn.hyperreach.site/assets/men-expression/editorial.webp"},
+  { id: 'playful', name: 'Joyful Laugh', prompt: 'candid laughter, eyes crinkled with joy',image:"https://cdn.hyperreach.site/assets/men-expression/joyful.webp"},
+  { id: 'candid-glance', name: 'Candid Glance', prompt: 'looking slightly away with a natural, unposed facial expression as if unaware of the camera',image:"https://cdn.hyperreach.site/assets/men-expression/candid.webp"},
+  { id: 'surprised', name: 'Surprised Delight', prompt: 'wide-eyed, genuine expression of joyful surprise with a slight open mouth',image:"https://cdn.hyperreach.site/assets/men-expression/surprised.webp"},
+  { id: 'thoughtful', name: 'Pensive Mood', prompt: 'thoughtful, pensive expression with eyes looking slightly off-camera',image:"https://cdn.hyperreach.site/assets/men-expression/pensive.webp"},
+  { id: 'shy-smile', name: 'Bashful Glow', prompt: 'looking down with a shy, bashful, and sweet smile',image:"https://cdn.hyperreach.site/assets/men-expression/bash.webp"},
+  { id: 'full-laughter', name: 'Vibrant Laughter', prompt: 'unrestrained, full-faced laughter with head tilted slightly back',image:"https://cdn.hyperreach.site/assets/men-expression/vibrant.webp" },
+  { id: 'dreamy', name: 'Dreamy Focus', prompt: 'a soft, dreamy expression with a serene and focused gaze',image:"https://cdn.hyperreach.site/assets/men-expression/dreamy.webp"},
 ];
 
 export const EXPRESSION_OPTIONS_KIDS: ExpressionOption[] = [
-  { id: 'neutral', name: 'Calm & Poised', prompt: 'serene, calm facial expression' },
-  { id: 'subtle-smile', name: 'Warm Glow', prompt: 'a gentle, inviting smile that reaches the eyes' },
-  { id: 'confident', name: 'Piercing Gaze', prompt: 'self-assured, bold expression with a slight smirk' },
-  { id: 'serious-fashion', name: 'Editorial Intense', prompt: 'vogue-style serious expression' },
-  { id: 'playful', name: 'Joyful Laugh', prompt: 'candid laughter, eyes crinkled with joy' },
-  { id: 'candid-glance', name: 'Candid Glance', prompt: 'looking slightly away with a natural, unposed facial expression as if unaware of the camera' },
-  { id: 'surprised', name: 'Surprised Delight', prompt: 'wide-eyed, genuine expression of joyful surprise with a slight open mouth' },
-  { id: 'thoughtful', name: 'Pensive Mood', prompt: 'thoughtful, pensive expression with eyes looking slightly off-camera' },
-  { id: 'shy-smile', name: 'Bashful Glow', prompt: 'looking down with a shy, bashful, and sweet smile' },
-  { id: 'full-laughter', name: 'Vibrant Laughter', prompt: 'unrestrained, full-faced laughter with head tilted slightly back' },
-  { id: 'dreamy', name: 'Dreamy Focus', prompt: 'a soft, dreamy expression with a serene and focused gaze' },
+  { id: 'neutral', name: 'Calm & Poised', prompt: 'serene, calm facial expression',image:"https://cdn.hyperreach.site/assets/kid-expression/calm-and-poised.webp"},
+  { id: 'subtle-smile', name: 'Warm Glow', prompt: 'a gentle, inviting smile that reaches the eyes' ,image:"https://cdn.hyperreach.site/assets/kid-expression/warm.webp"},
+  { id: 'confident', name: 'Piercing Gaze', prompt: 'self-assured, bold expression with a slight smirk' ,image:"https://cdn.hyperreach.site/assets/kid-expression/piercing.webp"},
+  { id: 'serious-fashion', name: 'Editorial Intense', prompt: 'vogue-style serious expression' ,image:"https://cdn.hyperreach.site/assets/kid-expression/editorial.webp"},
+  { id: 'playful', name: 'Joyful Laugh', prompt: 'candid laughter, eyes crinkled with joy' ,image:"https://cdn.hyperreach.site/assets/kid-expression/joyful.webp"},
+  { id: 'candid-glance', name: 'Candid Glance', prompt: 'looking slightly away with a natural, unposed facial expression as if unaware of the camera' ,image:"https://cdn.hyperreach.site/assets/kid-expression/candid.webp"},
+  { id: 'surprised', name: 'Surprised Delight', prompt: 'wide-eyed, genuine expression of joyful surprise with a slight open mouth' ,image:"https://cdn.hyperreach.site/assets/kid-expression/suprised.webp"},
+  { id: 'thoughtful', name: 'Pensive Mood', prompt: 'thoughtful, pensive expression with eyes looking slightly off-camera' ,image:"https://cdn.hyperreach.site/assets/kid-expression/pensive.webp"},
+  { id: 'shy-smile', name: 'Bashful Glow', prompt: 'looking down with a shy, bashful, and sweet smile' ,image:"https://cdn.hyperreach.site/assets/kid-expression/bash.webp"},
+  { id: 'full-laughter', name: 'Vibrant Laughter', prompt: 'unrestrained, full-faced laughter with head tilted slightly back' ,image:"https://cdn.hyperreach.site/assets/kid-expression/vibrant.webp"},
+  { id: 'dreamy', name: 'Dreamy Focus', prompt: 'a soft, dreamy expression with a serene and focused gaze' ,image:"https://cdn.hyperreach.site/assets/kid-expression/dreamy.webp"},
 ];
 
 export const EXPRESSION_OPTIONS_JEWELLERY: ExpressionOption[] = [
@@ -807,42 +801,42 @@ export const VIEW_OPTIONS: ViewOption[] = [
 
 // Category-specific VIEW OPTIONS
 export const VIEW_OPTIONS_WOMEN: ViewOption[] = [
-  { id: 'front-view', name: 'Direct Frontal', prompt: 'full frontal camera angle' },
-  { id: 'three-quarter-view', name: '3/4 Perspective', prompt: 'three-quarter perspective' },
-  { id: 'side-view', name: 'Side Profile', prompt: 'clean 90-degree side profile' },
-  { id: 'dynamic-side', name: '45-Degree Side', prompt: 'cinematic 45-degree angle focusing on jewelry depth' },
-  { id: 'back-view', name: 'Rear View', prompt: 'full rear view' },
-  { id: 'low-angle', name: 'Hero Angle', prompt: 'low-angle upward shot' },
-  { id: 'close-up', name: 'Portrait Close-up', prompt: 'head and shoulders shot' },
-  { id: 'extreme-macro', name: 'Micro Detail', prompt: 'extreme microscopic focus on jewelry textures and gemstone facets' },
-  { id: 'waist-up', name: 'Medium Shot', prompt: 'waist-up camera framing' },
-  { id: 'birds-eye', name: 'Bird\'s Eye View', prompt: 'top-down vertical view from above, artistic perspective' },
+  { id: 'front-view', name: 'Direct Frontal', prompt: 'full frontal camera angle',image:"https://cdn.hyperreach.site/assets/women-view/direct.webp" },
+  { id: 'three-quarter-view', name: '3/4 Perspective', prompt: 'three-quarter perspective',image:"https://cdn.hyperreach.site/assets/women-view/3-4%20.webp"  },
+  { id: 'side-view', name: 'Side Profile', prompt: 'clean 90-degree side profile',image:"https://cdn.hyperreach.site/assets/women-view/side.webp"  },
+  { id: 'dynamic-side', name: '45-Degree Side', prompt: 'cinematic 45-degree angle focusing on jewelry depth' ,image:"https://cdn.hyperreach.site/assets/women-view/45.webp" },
+  { id: 'back-view', name: 'Rear View', prompt: 'full rear view',image:"https://cdn.hyperreach.site/assets/women-view/rear.webp" },
+  { id: 'low-angle', name: 'Hero Angle', prompt: 'low-angle upward shot',image:"https://cdn.hyperreach.site/assets/women-view/hero.webp"  },
+  { id: 'close-up', name: 'Portrait Close-up', prompt: 'head and shoulders shot',image:"https://cdn.hyperreach.site/assets/women-view/potrait.webp"  },
+  { id: 'extreme-macro', name: 'Micro Detail', prompt: 'extreme microscopic focus on jewelry textures and gemstone facets',image:"https://cdn.hyperreach.site/assets/women-view/micro.webp"  },
+  { id: 'waist-up', name: 'Medium Shot', prompt: 'waist-up camera framing' ,image:"https://cdn.hyperreach.site/assets/women-view/medium.webp" },
+  { id: 'birds-eye', name: 'Bird\'s Eye View', prompt: 'top-down vertical view from above, artistic perspective' ,image:"https://cdn.hyperreach.site/assets/women-view/bird.webp" },
 ];
 
 export const VIEW_OPTIONS_MEN: ViewOption[] = [
-  { id: 'front-view', name: 'Direct Frontal', prompt: 'full frontal camera angle' },
-  { id: 'three-quarter-view', name: '3/4 Perspective', prompt: 'three-quarter perspective' },
-  { id: 'side-view', name: 'Side Profile', prompt: 'clean 90-degree side profile' },
-  { id: 'dynamic-side', name: '45-Degree Side', prompt: 'cinematic 45-degree angle focusing on jewelry depth' },
-  { id: 'back-view', name: 'Rear View', prompt: 'full rear view' },
-  { id: 'low-angle', name: 'Hero Angle', prompt: 'low-angle upward shot' },
-  { id: 'close-up', name: 'Portrait Close-up', prompt: 'head and shoulders shot' },
-  { id: 'extreme-macro', name: 'Micro Detail', prompt: 'extreme microscopic focus on jewelry textures and gemstone facets' },
-  { id: 'waist-up', name: 'Medium Shot', prompt: 'waist-up camera framing' },
-  { id: 'birds-eye', name: 'Bird\'s Eye View', prompt: 'top-down vertical view from above, artistic perspective' },
+  { id: 'front-view', name: 'Direct Frontal', prompt: 'full frontal camera angle' ,image:"https://cdn.hyperreach.site/assets/men-view/direct_front.webp"},
+  { id: 'three-quarter-view', name: '3/4 Perspective', prompt: 'three-quarter perspective' ,image:"https://cdn.hyperreach.site/assets/men-view/3-4.webp"},
+  { id: 'side-view', name: 'Side Profile', prompt: 'clean 90-degree side profile' ,image:"https://cdn.hyperreach.site/assets/men-view/side%20.webp"},
+  { id: 'dynamic-side', name: '45-Degree Side', prompt: 'cinematic 45-degree angle focusing on jewelry depth' ,image:"https://cdn.hyperreach.site/assets/men-view/45-degree.webp"},
+  { id: 'back-view', name: 'Rear View', prompt: 'full rear view' ,image:"https://cdn.hyperreach.site/assets/men-view/rearview.webp"},
+  { id: 'low-angle', name: 'Hero Angle', prompt: 'low-angle upward shot' ,image:"https://cdn.hyperreach.site/assets/men-view/hero.webp"},
+  { id: 'close-up', name: 'Portrait Close-up', prompt: 'head and shoulders shot' ,image:"https://cdn.hyperreach.site/assets/men-view/potrainclose-up.webp"},
+  { id: 'extreme-macro', name: 'Micro Detail', prompt: 'extreme microscopic focus on jewelry textures and gemstone facets' ,image:"https://cdn.hyperreach.site/assets/men-view/micro%20detail.webp"},
+  { id: 'waist-up', name: 'Medium Shot', prompt: 'waist-up camera framing' ,image:"https://cdn.hyperreach.site/assets/men-view/medium%20.webp"},
+  { id: 'birds-eye', name: 'Bird\'s Eye View', prompt: 'top-down vertical view from above, artistic perspective' ,image:"https://cdn.hyperreach.site/assets/men-view/bird%20eye.webp"},
 ];
 
 export const VIEW_OPTIONS_KIDS: ViewOption[] = [
-  { id: 'front-view', name: 'Direct Frontal', prompt: 'full frontal camera angle' },
-  { id: 'three-quarter-view', name: '3/4 Perspective', prompt: 'three-quarter perspective' },
-  { id: 'side-view', name: 'Side Profile', prompt: 'clean 90-degree side profile' },
-  { id: 'dynamic-side', name: '45-Degree Side', prompt: 'cinematic 45-degree angle focusing on jewelry depth' },
-  { id: 'back-view', name: 'Rear View', prompt: 'full rear view' },
-  { id: 'low-angle', name: 'Hero Angle', prompt: 'low-angle upward shot' },
-  { id: 'close-up', name: 'Portrait Close-up', prompt: 'head and shoulders shot' },
-  { id: 'extreme-macro', name: 'Micro Detail', prompt: 'extreme microscopic focus on jewelry textures and gemstone facets' },
-  { id: 'waist-up', name: 'Medium Shot', prompt: 'waist-up camera framing' },
-  { id: 'birds-eye', name: 'Bird\'s Eye View', prompt: 'top-down vertical view from above, artistic perspective' },
+  { id: 'front-view', name: 'Direct Frontal', prompt: 'full frontal camera angle',image:"https://cdn.hyperreach.site/assets/kid-view/direct.webp" },
+  { id: 'three-quarter-view', name: '3/4 Perspective', prompt: 'three-quarter perspective' ,image:"https://cdn.hyperreach.site/assets/kid-view/3-4.webp"},
+  { id: 'side-view', name: 'Side Profile', prompt: 'clean 90-degree side profile' ,image:"https://cdn.hyperreach.site/assets/kid-view/side.webp"},
+  { id: 'dynamic-side', name: '45-Degree Side', prompt: 'cinematic 45-degree angle focusing on jewelry depth' ,image:"https://cdn.hyperreach.site/assets/kid-view/45.webp"},
+  { id: 'back-view', name: 'Rear View', prompt: 'full rear view' ,image:"https://cdn.hyperreach.site/assets/kid-view/rear.webp"},
+  { id: 'low-angle', name: 'Hero Angle', prompt: 'low-angle upward shot' ,image:"https://cdn.hyperreach.site/assets/kid-view/hero.webp"},
+  { id: 'close-up', name: 'Portrait Close-up', prompt: 'head and shoulders shot' ,image:"https://cdn.hyperreach.site/assets/kid-view/potrait.webp"},
+  { id: 'extreme-macro', name: 'Micro Detail', prompt: 'extreme microscopic focus on jewelry textures and gemstone facets' ,image:"https://cdn.hyperreach.site/assets/kid-view/micro.webp"},
+  { id: 'waist-up', name: 'Medium Shot', prompt: 'waist-up camera framing' ,image:"https://cdn.hyperreach.site/assets/kid-view/medium.webp"},
+  { id: 'birds-eye', name: 'Bird\'s Eye View', prompt: 'top-down vertical view from above, artistic perspective' ,image:"https://cdn.hyperreach.site/assets/kid-view/bird.png"},
 ];
 
 export const VIEW_OPTIONS_JEWELLERY: ViewOption[] = [
@@ -998,6 +992,48 @@ export interface UserDetails extends User {
     avgCreditsPerSession: number;
     lastActive: string;
   };
+}
+
+// --- ADMIN USER IMAGES TYPES ---
+
+export interface AdminUserImage {
+  id: string;
+  imageUrl: string;
+  thumbnailUrl?: string;
+  creditsUsed: number;
+  quality: string;
+  section: string;
+  category: string;
+  createdAt: string;
+}
+
+export interface AdminUserImagesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface AdminUserImagesFilterOptions {
+  sections: string[];
+  categories: string[];
+  qualities: string[];
+}
+
+export interface AdminUserImagesFilters {
+  section?: string;
+  category?: string;
+  quality?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface AdminUserImagesResponse {
+  images: AdminUserImage[];
+  pagination: AdminUserImagesPagination;
+  filterOptions?: AdminUserImagesFilterOptions;
 }
 
 // --- REPORT/FEEDBACK TYPES ---

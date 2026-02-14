@@ -69,6 +69,7 @@ const StepWizard: React.FC<StepWizardProps> = ({
     if (canProceed && currentStep < steps.length - 1) {
       onNext?.();
       onStepChange(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -76,6 +77,7 @@ const StepWizard: React.FC<StepWizardProps> = ({
     if (currentStep > 0) {
       onBack?.();
       onStepChange(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -83,6 +85,7 @@ const StepWizard: React.FC<StepWizardProps> = ({
     // Only allow going back to completed steps
     if (stepIndex < currentStep) {
       onStepChange(stepIndex);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

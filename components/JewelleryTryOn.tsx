@@ -17,7 +17,7 @@ import { useConfig } from '../hooks/useConfig';
 import TokenEstimator from './TokenEstimator';
 import { clearAuth } from '../services/apiClient';
 import GenerateButton from './GenerateButton';
-import { validateGenerationAttempt, hasActivePaidPlan } from '../services/authService';
+import { validateGenerationAttempt, hasActivePaidPlan, hasRemainingCredits } from '../services/authService';
 
 interface JewelleryTryOnProps {
   user: User;
@@ -172,8 +172,8 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
         <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Hyper-Realistic Virtual Adornment</p>
       </div>
 
-      {/* CRITICAL: Plan Status Warning */}
-      {!hasActivePaidPlan(user) && (
+      {/* Plan Status Warning - only show hard block when no plan AND no credits */}
+      {!hasActivePaidPlan(user) && !hasRemainingCredits(user) && (
         <div className="mb-6 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-2xl max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4">
           <div className="flex items-start gap-4">
             <svg className="w-8 h-8 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,9 +184,9 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
                 {user.planType === 'Free' ? 'Upgrade Required' : 'Subscription Expired'}
               </h3>
               <p className="text-yellow-700 font-bold mb-3">
-                {user.planType === 'Free' 
+                {user.planType === 'Free'
                   ? 'Image generation is only available for paid subscribers. Upgrade now to start creating!'
-                  : 'Your subscription has expired. Renew your plan to continue generating images.'}
+                  : 'Your subscription has expired and you have no remaining credits. Renew your plan to continue generating images.'}
               </p>
               <button
                 onClick={() => onNavigate('pricing')}
@@ -195,6 +195,25 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
                 {user.planType === 'Free' ? 'View Plans & Pricing' : 'Renew Subscription'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Expired but has remaining credits */}
+      {!hasActivePaidPlan(user) && hasRemainingCredits(user) && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-center gap-3">
+            <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-blue-800 font-semibold text-sm">
+              Your subscription has expired, but you still have <span className="font-black">{user.tokenBalance} credits</span> remaining. You can continue generating until they run out.
+            </p>
+            <button
+              onClick={() => onNavigate('pricing')}
+              className="ml-auto px-4 py-2 text-sm bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              Renew Plan
+            </button>
           </div>
         </div>
       )}

@@ -146,19 +146,19 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
     };
 
     if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading Dashboard...</div>;
-    if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
+    if (error) return <div className="p-8 text-feedback-error">Error: {error}</div>;
     if (!data) return null;
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">User Dashboard</h1>
-                    <p className="text-gray-600">Manage your account and view usage statistics</p>
+                    <h1 className="text-3xl font-bold text-content">User Dashboard</h1>
+                    <p className="text-content-secondary">Manage your account and view usage statistics</p>
                 </div>
                 <button
                     onClick={onBack}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium"
+                    className="px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-interactive-hover transition-all font-medium"
                 >
                     Back to Studio
                 </button>
@@ -166,14 +166,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
 
             {/* Tab Navigation */}
             <div className="mb-8">
-                <div className="border-b border-gray-200">
+                <div className="border-b border-border">
                     <nav className="-mb-px flex space-x-8">
                         <button
                             onClick={() => setActiveTab('dashboard')}
                             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                                 activeTab === 'dashboard'
                                     ? 'border-primary text-primary'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    : 'border-transparent text-content-tertiary hover:text-content-secondary hover:border-border-secondary'
                             }`}
                         >
                             Dashboard
@@ -183,7 +183,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                                 activeTab === 'reports'
                                     ? 'border-primary text-primary'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    : 'border-transparent text-content-tertiary hover:text-content-secondary hover:border-border-secondary'
                             }`}
                         >
                             My Reports
@@ -197,100 +197,100 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                 <>
                     {/* Overview Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Brand Name</p>
-                    <p className="text-xl font-bold text-gray-900">{user.brandName || 'N/A'}</p>
+                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border">
+                    <p className="text-sm text-content-tertiary mb-1">Brand Name</p>
+                    <p className="text-xl font-bold text-content">{user.brandName || 'N/A'}</p>
                 </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Account Type</p>
+                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border">
+                    <p className="text-sm text-content-tertiary mb-1">Account Type</p>
                     <p className="text-xl font-bold text-primary">{user.planType || 'Free'}</p>
                 </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Subscription Expiry</p>
-                    <p className="text-xl font-bold text-gray-900">{user.subscriptionExpiry || 'N/A'}</p>
+                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border">
+                    <p className="text-sm text-content-tertiary mb-1">Subscription Expiry</p>
+                    <p className="text-xl font-bold text-content">{user.subscriptionExpiry || 'N/A'}</p>
                 </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Remaining Credits</p>
-                    <p className="text-xl font-bold text-green-600">{user.tokenBalance} ⚡</p>
+                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border">
+                    <p className="text-sm text-content-tertiary mb-1">Remaining Credits</p>
+                    <p className="text-xl font-bold text-feedback-success">{user.tokenBalance} ⚡</p>
                 </div>
             </div>
 
             {/* Usage Summary */}
-            <div className="bg-gradient-to-r from-indigo-600 to-primary rounded-2xl p-8 mb-8 text-white shadow-lg">
+            <div className="bg-primary rounded-2xl p-8 mb-8 text-content-inverse shadow-lg">
                 <h2 className="text-2xl font-bold mb-6">Usage Summary</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="text-center">
-                        <p className="text-indigo-100 text-sm mb-2 uppercase tracking-wider">Total Try-Ons</p>
+                        <p className="text-content-inverse/70 text-sm mb-2 uppercase tracking-wider">Total Try-Ons</p>
                         <p className="text-4xl font-black">{data.totalTryOns}</p>
                     </div>
-                    <div className="text-center border-x border-indigo-400/30">
-                        <p className="text-indigo-100 text-sm mb-2 uppercase tracking-wider">Usage This Month</p>
+                    <div className="text-center border-x border-content-inverse/20">
+                        <p className="text-content-inverse/70 text-sm mb-2 uppercase tracking-wider">Usage This Month</p>
                         <p className="text-4xl font-black">{data.usageThisMonth}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-indigo-100 text-sm mb-2 uppercase tracking-wider">Estimated Cost Saved</p>
-                        <p className="text-4xl font-black text-white-300">₹{data.costSaved.toLocaleString('en-IN')}</p>
-                        <p className="text-xs mt-2 text-indigo-100 opacity-80">vs. traditional photoshoots (₹800/shoot)</p>
+                        <p className="text-content-inverse/70 text-sm mb-2 uppercase tracking-wider">Estimated Cost Saved</p>
+                        <p className="text-4xl font-black">₹{data.costSaved.toLocaleString('en-IN')}</p>
+                        <p className="text-xs mt-2 text-content-inverse/60">vs. traditional photoshoots (₹800/shoot)</p>
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Profile Update Section */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-900">Update Profile</h3>
-                        <p className="text-sm text-gray-500 mt-1">Manage your account information</p>
+                <div className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border overflow-hidden">
+                    <div className="p-6 border-b border-border">
+                        <h3 className="text-lg font-bold text-content">Update Profile</h3>
+                        <p className="text-sm text-content-tertiary mt-1">Manage your account information</p>
                     </div>
                     <form onSubmit={handleProfileUpdate} className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Full Name</label>
+                                <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Full Name</label>
                                 <input
                                     type="text"
                                     value={profileForm.fullName}
                                     onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full px-4 py-3 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
                                     placeholder="Enter your full name"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Brand Name</label>
+                                <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Brand Name</label>
                                 <input
                                     type="text"
                                     value={profileForm.brandName}
                                     onChange={(e) => setProfileForm({ ...profileForm, brandName: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full px-4 py-3 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
                                     placeholder="Enter your brand name"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
+                                <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Email</label>
                                 <input
                                     type="email"
                                     value={user.email}
                                     disabled
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                                    className="w-full px-4 py-3 border border-border rounded-lg text-sm bg-surface-secondary text-content-tertiary cursor-not-allowed"
                                 />
-                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+                                <p className="text-xs text-content-disabled mt-1">Email cannot be changed</p>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Mobile Number</label>
+                                <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Mobile Number</label>
                                 <input
                                     type="tel"
                                     value={profileForm.mobile}
                                     onChange={(e) => setProfileForm({ ...profileForm, mobile: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full px-4 py-3 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
                                     placeholder="Enter your mobile number"
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Website URL</label>
+                                <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Website URL</label>
                                 <input
                                     type="url"
                                     value={profileForm.website}
                                     onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    className="w-full px-4 py-3 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none"
                                     placeholder="https://your-website.com"
                                 />
                             </div>
@@ -298,7 +298,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
 
                         {profileMessage.text && (
                             <div className={`mt-4 p-3 rounded-lg text-sm font-medium ${
-                                profileMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                                profileMessage.type === 'success' ? 'bg-feedback-success-light text-feedback-success' : 'bg-feedback-error-light text-feedback-error'
                             }`}>
                                 {profileMessage.text}
                             </div>
@@ -307,7 +307,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                         <button
                             type="submit"
                             disabled={isUpdatingProfile}
-                            className="mt-6 px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-indigo-800 transition-all disabled:opacity-50 flex items-center gap-2"
+                            className="mt-6 px-6 py-3 bg-primary text-content-inverse rounded-lg font-bold hover:bg-secondary transition-all disabled:opacity-50 flex items-center gap-2"
                         >
                             {isUpdatingProfile ? (
                                 <>
@@ -321,30 +321,30 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                     </form>
 
                     {/* Change Password Section */}
-                    <div className="p-6 border-t border-gray-100 bg-gray-50">
-                        <h4 className="text-md font-bold text-gray-900 mb-4">Change Password</h4>
+                    <div className="p-6 border-t border-border bg-surface-secondary">
+                        <h4 className="text-md font-bold text-content mb-4">Change Password</h4>
                         <form onSubmit={handlePasswordChange}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">New Password</label>
+                                    <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">New Password</label>
                                     <input
                                         type="password"
                                         value={passwordForm.newPassword}
                                         onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none bg-white"
+                                        className="w-full px-4 py-3 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none bg-surface"
                                         placeholder="Enter new password"
                                         required
                                         minLength={6}
                                     />
-                                    <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
+                                    <p className="text-xs text-content-disabled mt-1">Minimum 6 characters</p>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Confirm Password</label>
+                                    <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Confirm Password</label>
                                     <input
                                         type="password"
                                         value={passwordForm.confirmPassword}
                                         onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none bg-white"
+                                        className="w-full px-4 py-3 border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none bg-surface"
                                         placeholder="Confirm new password"
                                         required
                                         minLength={6}
@@ -354,7 +354,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
 
                             {passwordMessage.text && (
                                 <div className={`mt-4 p-3 rounded-lg text-sm font-medium ${
-                                    passwordMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                                    passwordMessage.type === 'success' ? 'bg-feedback-success-light text-feedback-success' : 'bg-feedback-error-light text-feedback-error'
                                 }`}>
                                     {passwordMessage.text}
                                 </div>
@@ -363,7 +363,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                             <button
                                 type="submit"
                                 disabled={isChangingPassword}
-                                className="mt-4 px-6 py-2.5 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2 text-sm"
+                                className="mt-4 px-6 py-2.5 bg-primary text-content-inverse rounded-lg font-bold hover:bg-secondary transition-all disabled:opacity-50 flex items-center gap-2 text-sm"
                             >
                                 {isChangingPassword ? (
                                     <>
@@ -380,23 +380,23 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
 
                 {/* Billing & Settings */}
                 <div className="space-y-8">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Billing & Subscription</h3>
+                    <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
+                        <h3 className="text-lg font-bold text-content mb-4">Billing & Subscription</h3>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <span className="text-sm text-gray-600">Status</span>
-                                <span className="text-sm font-bold text-green-600">{data.planDetails.status}</span>
+                            <div className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
+                                <span className="text-sm text-content-secondary">Status</span>
+                                <span className="text-sm font-bold text-feedback-success">{data.planDetails.status}</span>
                             </div>
                             <button
                                 onClick={onNavigateToPricing}
-                                className="w-full py-2 bg-primary text-white rounded-lg font-bold hover:bg-indigo-800 transition-all text-sm"
+                                className="w-full py-2 bg-primary text-content-inverse rounded-lg font-bold hover:bg-secondary transition-all text-sm"
                             >
                                 Upgrade Plan
                             </button>
                             {user.role === 'user' && (
                                 <button
                                     onClick={() => window.dispatchEvent(new CustomEvent('navigate-addon-credits'))}
-                                    className="w-full py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-all text-sm shadow-sm"
+                                    className="w-full py-2 bg-feedback-success text-content-inverse rounded-lg font-bold hover:opacity-90 transition-all text-sm shadow-sm"
                                 >
                                     Add-On Credits
                                 </button>
@@ -405,24 +405,24 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                     </div>
 
                     {/* Account Info Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Account Info</h3>
+                    <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
+                        <h3 className="text-lg font-bold text-content mb-4">Account Info</h3>
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-sm text-gray-500">Member Since</span>
-                                <span className="text-sm font-medium text-gray-900">
+                            <div className="flex items-center justify-between py-2 border-b border-border">
+                                <span className="text-sm text-content-tertiary">Member Since</span>
+                                <span className="text-sm font-medium text-content">
                                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-sm text-gray-500">Last Login</span>
-                                <span className="text-sm font-medium text-gray-900">
+                            <div className="flex items-center justify-between py-2 border-b border-border">
+                                <span className="text-sm text-content-tertiary">Last Login</span>
+                                <span className="text-sm font-medium text-content">
                                     {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'N/A'}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-2">
-                                <span className="text-sm text-gray-500">Account Status</span>
-                                <span className="text-sm font-bold text-green-600">Active</span>
+                                <span className="text-sm text-content-tertiary">Account Status</span>
+                                <span className="text-sm font-bold text-feedback-success">Active</span>
                             </div>
                         </div>
                     </div>

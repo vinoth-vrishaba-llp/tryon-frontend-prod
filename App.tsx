@@ -15,7 +15,7 @@ import PricingPage from "./components/PricingPage";
 import AddOnCreditsPage from "./components/AddOnCreditsPage";
 import CheckoutPage from "./components/CheckoutPage";
 import LibraryPage from "./components/LibraryPage";
-import { checkMaintenanceStatus } from "./services/dashboardService";
+import { checkMaintenanceStatus, getCurrentUserProfile } from "./services/dashboardService";
 import { restoreSession, logout } from "./services/authService";
 import { setStoredUser } from "./services/apiClient";
 import { Plan } from "./types";
@@ -196,6 +196,54 @@ const App: React.FC = () => {
     const interval = setInterval(checkMaintenance, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Poll user profile for credit/plan changes (e.g. admin adding credits)
+  useEffect(() => {
+    if (!user || user.role === 'admin') return;
+
+    const pollProfile = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const { user: profile } = await getCurrentUserProfile();
+        const newCredits = profile.creditsBalance || 0;
+        const currentCredits = user.creditsBalance ?? user.tokenBalance ?? 0;
+
+        if (newCredits !== currentCredits) {
+          handleCreditsUpdate(newCredits);
+        }
+
+        // Detect plan/status changes
+        if (
+          profile.planType !== user.planType ||
+          profile.paymentStatus !== user.paymentStatus ||
+          profile.isActive !== user.isActive
+        ) {
+          handleUserUpdate(profile);
+        }
+      } catch {
+        // Silently ignore — apiClient handles 401s
+      }
+    };
+
+    const interval = setInterval(pollProfile, 60000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        pollProfile();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [user]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [page]);
 
   // Global navigation events
   useEffect(() => {
@@ -379,8 +427,8 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-content-secondary">Loading...</div>
       </div>
     );
   }
@@ -417,7 +465,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-gray-800 overflow-x-hidden">
+    <div className="min-h-screen bg-surface-secondary text-content overflow-x-hidden">
       <Header
         onHomeClick={() => handleNavigate("home")}
         showHomeButton={page !== "home"}

@@ -1,5 +1,6 @@
-import { UserDashboardData, AdminDashboardData } from "../types";
+import { UserDashboardData, AdminDashboardData, AdminUserImagesResponse, AdminUserImagesFilters } from "../types";
 import { apiClient } from "./apiClient";
+import { encryptData } from "./encryption";
 
 /**
  * Get user dashboard data
@@ -7,6 +8,13 @@ import { apiClient } from "./apiClient";
  */
 export const getUserDashboardData = async (): Promise<UserDashboardData> => {
     return apiClient.get<UserDashboardData>('/dashboard/user');
+};
+
+/**
+ * Get current user profile (lightweight, for polling)
+ */
+export const getCurrentUserProfile = async (): Promise<{ user: any }> => {
+    return apiClient.get<{ user: any }>('/user/me');
 };
 
 /**
@@ -42,6 +50,33 @@ export const getUserDetails = async (userId: string): Promise<any> => {
 };
 
 /**
+ * Get user's generated images (admin only)
+ * Supports pagination and filtering
+ */
+export const getUserImages = async (
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+    filters?: AdminUserImagesFilters
+): Promise<AdminUserImagesResponse> => {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+
+    if (filters) {
+        if (filters.section) params.append('section', filters.section);
+        if (filters.category) params.append('category', filters.category);
+        if (filters.quality) params.append('quality', filters.quality);
+        if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+        if (filters.dateTo) params.append('dateTo', filters.dateTo);
+    }
+
+    return apiClient.get<AdminUserImagesResponse>(
+        `/admin/user/${userId}/images?${params.toString()}`
+    );
+};
+
+/**
  * Check maintenance status (public endpoint)
  */
 export const checkMaintenanceStatus = async (): Promise<{ maintenanceMode: boolean }> => {
@@ -54,4 +89,16 @@ export const checkMaintenanceStatus = async (): Promise<{ maintenanceMode: boole
  */
 export const toggleUserStatus = async (userId: string, isActive: boolean): Promise<{ success: boolean; message: string; user: any }> => {
     return apiClient.post(`/admin/user/${userId}/toggle-status`, { isActive });
+};
+
+/**
+ * Admin reset user password (admin only)
+ * Directly changes a user's password without sending email
+ */
+export const adminResetPassword = async (userId: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    const encryptedPassword = await encryptData(newPassword);
+    return apiClient.post(`/admin/user/${userId}/reset-password`, {
+        newPassword: encryptedPassword,
+        encrypted: true
+    });
 };

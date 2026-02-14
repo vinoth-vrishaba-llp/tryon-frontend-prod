@@ -129,7 +129,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 },
 
                 theme: {
-                    color: '#1a237e'
+                    color: '#000000'
                 }
             };
 
@@ -153,37 +153,37 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-surface-secondary py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
                 <div className="flex items-center justify-between mb-12">
                     <div>
-                        <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+                        <h1 className="text-4xl font-black text-content tracking-tight">
                             Checkout
                         </h1>
-                        <p className="mt-2 text-lg text-gray-600">
+                        <p className="mt-2 text-lg text-content-secondary">
                             Review your plan and complete the payment.
                         </p>
                     </div>
                     <button
                         onClick={onBack}
-                        className="px-6 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm"
+                        className="px-6 py-2 bg-surface text-content-secondary border border-border rounded-xl font-bold hover:bg-surface-secondary transition-all shadow-sm"
                     >
                         Back to Pricing
                     </button>
                 </div>
 
                 {error && (
-                    <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-2xl text-center font-bold border border-red-100">
+                    <div className="mb-8 p-4 bg-surface-tertiary text-content rounded-2xl text-center font-bold border border-border">
                         {error}
                     </div>
                 )}
 
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div className="bg-surface rounded-3xl shadow-xl overflow-hidden border border-border">
                     <div className="p-8 sm:p-12">
                         <div className="flex flex-col md:flex-row gap-12">
                             {/* Plan Details */}
                             <div className="flex-1">
-                                <h2 className="text-2xl font-black text-gray-900 mb-6">
+                                <h2 className="text-2xl font-black text-content mb-6">
                                     Selected Plan
                                 </h2>
 
@@ -213,7 +213,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     </div>
                                 </div>
 
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                                <h3 className="text-lg font-bold text-content mb-4">
                                     Plan Features
                                 </h3>
 
@@ -223,11 +223,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         .map((feature, i) => (
                                             <li
                                                 key={i}
-                                                className="flex items-center gap-3 text-sm text-gray-600"
+                                                className="flex items-center gap-3 text-sm text-content-secondary"
                                             >
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
-                                                    className="h-5 w-5 text-green-500"
+                                                    className="h-5 w-5 text-primary"
                                                     viewBox="0 0 20 20"
                                                     fill="currentColor"
                                                 >
@@ -244,14 +244,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             </div>
 
                             {/* Order Summary */}
-                            <div className="w-full md:w-80 bg-gray-50 rounded-2xl p-8">
-                                <h2 className="text-xl font-black text-gray-900 mb-6">
+                            <div className="w-full md:w-80 bg-surface-secondary rounded-2xl p-8">
+                                <h2 className="text-xl font-black text-content mb-6">
                                     Order Summary
                                 </h2>
 
                                 <div className="space-y-4 mb-8">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">
+                                        <span className="text-content-tertiary">
                                             {plan.name} Plan ({plan.billingCycle})
                                         </span>
                                         <span className="font-bold">
@@ -260,12 +260,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     </div>
 
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Tax</span>
+                                        <span className="text-content-tertiary">Tax</span>
                                         <span className="font-bold">₹0</span>
                                     </div>
 
-                                    <div className="pt-4 border-t border-gray-200 flex justify-between items-baseline">
-                                        <span className="text-lg font-black text-gray-900">
+                                    <div className="pt-4 border-t border-border flex justify-between items-baseline">
+                                        <span className="text-lg font-black text-content">
                                             Total
                                         </span>
                                         <span className="text-2xl font-black text-primary">
@@ -277,12 +277,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 <button
                                     onClick={handlePayment}
                                     disabled={isLoading}
-                                    className="w-full py-4 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 hover:bg-indigo-800 transition-all active:scale-95 disabled:opacity-50"
+                                    className="w-full py-4 bg-primary text-content-inverse rounded-2xl font-black text-lg shadow-xl hover:bg-interactive-hover transition-all active:scale-95 disabled:opacity-50"
                                 >
                                     {isLoading ? 'Processing…' : 'Pay Now'}
                                 </button>
 
-                                <p className="mt-4 text-center text-xs text-gray-400">
+                                <p className="mt-4 text-center text-xs text-content-disabled">
                                     Secure payment via Razorpay
                                 </p>
                             </div>

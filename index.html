@@ -7,18 +7,79 @@
     <title>AI Virtual Try-On</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      /**
+       * Centralized Theme Configuration
+       * All colors are managed here for scalability and flexibility.
+       * To change the theme, modify the color values below.
+       */
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-               primary: '#0D9488',
-              secondary: '#0D9488',
-              accent: '#9B2226',
-              background: '#f1f5f9',
+              // === PRIMARY BRAND COLORS ===
+              primary: '#000000',      // Main brand color (black)
+              secondary: '#333333',    // Secondary brand color (dark gray)
+              accent: '#000000',       // Accent for CTAs (black)
+
+              // === SURFACE/BACKGROUND COLORS ===
+              background: '#FFFFFF',   // Page background (white)
+              surface: {
+                DEFAULT: '#FFFFFF',    // Card/component backgrounds
+                secondary: '#F5F5F5',  // Secondary surfaces (light gray)
+                tertiary: '#E5E5E5',   // Tertiary surfaces (medium light gray)
+                inverse: '#000000',    // Inverse surface (black)
+              },
+
+              // === TEXT COLORS ===
+              content: {
+                DEFAULT: '#000000',    // Primary text (black)
+                secondary: '#4A4A4A',  // Secondary text (dark gray)
+                tertiary: '#737373',   // Tertiary/muted text (medium gray)
+                inverse: '#FFFFFF',    // Inverse text (white)
+                disabled: '#A3A3A3',   // Disabled text (light gray)
+              },
+
+              // === BORDER COLORS ===
+              border: {
+                DEFAULT: '#E5E5E5',    // Default border (light gray)
+                secondary: '#D4D4D4',  // Secondary border (medium gray)
+                strong: '#000000',     // Strong/emphasized border (black)
+                focus: '#000000',      // Focus ring color (black)
+              },
+
+              // === INTERACTIVE ELEMENT COLORS ===
+              interactive: {
+                DEFAULT: '#000000',    // Default interactive (black)
+                hover: '#333333',      // Hover state (dark gray)
+                active: '#1A1A1A',     // Active/pressed state
+                disabled: '#A3A3A3',   // Disabled state
+              },
+
+              // === FEEDBACK/STATUS COLORS (Minimal for B&W theme) ===
+              feedback: {
+                success: '#000000',    // Success state
+                error: '#000000',      // Error state
+                warning: '#4A4A4A',    // Warning state
+                info: '#737373',       // Info state
+              },
             },
             fontFamily: {
-                  sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-            }
+              sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            },
+            // === ANIMATIONS ===
+            keyframes: {
+              shimmer: {
+                '100%': { transform: 'translateX(100%)' },
+              },
+            },
+            // === BOX SHADOWS (grayscale) ===
+            boxShadow: {
+              'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              'DEFAULT': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+              'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+              'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+              'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            },
           }
         }
       }

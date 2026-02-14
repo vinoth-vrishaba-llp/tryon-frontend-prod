@@ -253,10 +253,32 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your library...</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
+            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
+        </div>
+        {/* Filter bar skeleton */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="md:w-48 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="md:w-48 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+        {/* Grid skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="rounded-xl overflow-hidden bg-gray-100 aspect-square">
+              <div className="w-full h-full animate-pulse bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 relative overflow-hidden">
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -427,21 +449,29 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
                   setSelectedImage(item);
                 }}
               >
-                {/* Skeleton loader */}
+                {/* Skeleton shimmer loader */}
                 {loadingImages.has(item.id) && (
-                  <div className="absolute inset-0 animate-pulse bg-gray-200 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+                  <div className="absolute inset-0 bg-gray-200 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200"></div>
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+                    {/* Placeholder icon */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
                   </div>
                 )}
                 <img
                   src={item.thumbnailUrl || item.imageUrl}
                   alt={item.category || 'Generated image'}
-                  className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
+                  className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-110 ${
                     loadingImages.has(item.id) ? 'opacity-0' : 'opacity-100'
                   }`}
                   loading="lazy"
                   decoding="async"
-                  fetchpriority="low"
+                  fetchPriority="low"
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
                   onLoad={() => handleImageLoad(item.id)}
                   onError={(e) => {
                     handleImageLoad(item.id);
@@ -535,27 +565,24 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
 
             {/* Modal Image */}
             <div className="flex-1 overflow-auto p-2 sm:p-4 bg-gray-50 flex items-center justify-center min-h-0 relative">
-              {/* Loading spinner overlay */}
+              {/* Skeleton loading state */}
               {isModalImageLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100/95 backdrop-blur-sm z-20">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="relative">
-                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent"></div>
-                      <div className="absolute inset-0 animate-pulse rounded-full h-16 w-16 border-4 border-primary/20"></div>
+                <div className="relative w-full h-[50vh] sm:h-[60vh] flex items-center justify-center">
+                  <div className="w-full h-full max-w-2xl rounded-lg bg-gray-200 overflow-hidden relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200"></div>
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+                    {/* Image placeholder icon */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                      <svg className="w-16 h-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent"></div>
+                        <span className="text-sm text-gray-400 font-medium">Loading full image...</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-700 font-semibold">Loading high quality image...</p>
                   </div>
                 </div>
-              )}
-              {/* Show thumbnail as placeholder while full image loads */}
-              {isModalImageLoading && selectedImage.thumbnailUrl && (
-                <img
-                  src={selectedImage.thumbnailUrl}
-                  alt={selectedImage.category || 'Generated image'}
-                  className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg shadow-lg blur-sm opacity-40"
-                  decoding="async"
-                  loading="eager"
-                />
               )}
               {/* Full quality image */}
               <img
@@ -565,7 +592,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
                   isModalImageLoading ? 'absolute opacity-0' : 'opacity-100'
                 }`}
                 decoding="async"
-                fetchpriority="high"
+                fetchPriority="high"
                 onLoad={() => setIsModalImageLoading(false)}
                 onError={() => setIsModalImageLoading(false)}
               />

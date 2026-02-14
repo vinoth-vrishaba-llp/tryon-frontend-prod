@@ -44,27 +44,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignu
             }}
         >
             {/* Background overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/30 to-black/60"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-surface-inverse/60 via-surface-inverse/30 to-surface-inverse/60"></div>
 
             <div
-                className="relative max-w-md w-full rounded-2xl 
-                bg-white backdrop-blur-xl 
-                shadow-2xl border border-white/30 
+                className="relative max-w-md w-full rounded-2xl
+                bg-surface backdrop-blur-xl
+                shadow-2xl border border-border
                 p-6 sm:p-8 z-10"
             >
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+                    <h1 className="text-4xl font-extrabold tracking-tight text-content">
                         Welcome Back
                     </h1>
-                    <p className="text-gray-600 mt-3 text-sm">
+                    <p className="text-content-secondary mt-3 text-sm">
                         Sign in to your AI Try-On Studio
                     </p>
                 </div>
 
                 {/* Error */}
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
+                    <div className="mb-6 p-4 bg-surface-tertiary border-l-4 border-border-strong text-content text-sm rounded">
                         {error}
                     </div>
                 )}
@@ -73,12 +73,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignu
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Email */}
                     <div className="relative">
-                        <Mail className="absolute left-3 top-3.5 text-gray-400 w-5 h-5" />
+                        <Mail className="absolute left-3 top-3.5 text-content-tertiary w-5 h-5" />
                         <input
                             type="email"
                             required
-                            className="w-full pl-11 pr-4 py-3 rounded-lg border 
-                            border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-lg border
+                            border-border focus:ring-2 focus:ring-border-focus focus:outline-none"
                             placeholder="name@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -87,12 +87,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignu
 
                     {/* Password */}
                     <div className="relative">
-                        <Lock className="absolute left-3 top-3.5 text-gray-400 w-5 h-5" />
+                        <Lock className="absolute left-3 top-3.5 text-content-tertiary w-5 h-5" />
                         <input
                             type={showPassword ? 'text' : 'password'}
                             required
-                            className="w-full pl-11 pr-16 py-3 rounded-lg border 
-                            border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full pl-11 pr-16 py-3 rounded-lg border
+                            border-border focus:ring-2 focus:ring-border-focus focus:outline-none"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -110,28 +110,28 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignu
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3 px-4 bg-primary text-white font-bold 
-                        rounded-lg shadow-lg hover:bg-indigo-800 
-                        transition-all duration-300 transform hover:scale-[1.02] 
-                        disabled:opacity-50 disabled:scale-100 
+                        className="w-full py-3 px-4 bg-primary text-content-inverse font-bold
+                        rounded-lg shadow-lg hover:bg-interactive-hover
+                        transition-all duration-300 transform hover:scale-[1.02]
+                        disabled:opacity-50 disabled:scale-100
                         flex justify-center items-center"
                     >
                         {isLoading ? (
-                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="h-5 w-5 border-2 border-content-inverse border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                             'Sign In'
                         )}
                     </button>
 
                     {/* Trust line */}
-                    <p className="text-xs text-gray-500 text-center">
-                        Secure login 
+                    <p className="text-xs text-content-tertiary text-center">
+                        Secure login
                     </p>
                 </form>
 
                 {/* Footer */}
-                <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                    <p className="text-gray-600">
+                <div className="mt-8 pt-6 border-t border-border text-center">
+                    <p className="text-content-secondary">
                         Don't have an account?{' '}
                         <button
                             onClick={onNavigateToSignup}

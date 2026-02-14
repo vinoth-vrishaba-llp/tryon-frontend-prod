@@ -34,7 +34,7 @@ import { useConfig } from '../hooks/useConfig';
 import TokenEstimator from './TokenEstimator';
 import { clearAuth } from '../services/apiClient';
 import GenerateButton from './GenerateButton';
-import { validateGenerationAttempt, hasActivePaidPlan } from '../services/authService';
+import { validateGenerationAttempt, hasActivePaidPlan, hasRemainingCredits } from '../services/authService';
 
 interface KidsTryOnProps {
   user: User;
@@ -276,32 +276,51 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
     <div className="container mx-auto">
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold text-primary">Kids Virtual Try-On</h2>
-        <p className="text-gray-500 text-sm mt-1">Realistic style visualization for children.</p>
+        <p className="text-content-tertiary text-sm mt-1">Realistic style visualization for children.</p>
       </div>
 
-      {/* CRITICAL: Plan Status Warning */}
-      {!hasActivePaidPlan(user) && (
-        <div className="mb-6 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-2xl max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4">
+      {/* Plan Status Warning - only show hard block when no plan AND no credits */}
+      {!hasActivePaidPlan(user) && !hasRemainingCredits(user) && (
+        <div className="mb-6 p-6 bg-feedback-warning-light border-2 border-feedback-warning rounded-2xl max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4">
           <div className="flex items-start gap-4">
-            <svg className="w-8 h-8 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-feedback-warning flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div className="flex-1">
-              <h3 className="text-lg font-black text-yellow-900 mb-2">
+              <h3 className="text-lg font-black text-content mb-2">
                 {user.planType === 'Free' ? 'Upgrade Required' : 'Subscription Expired'}
               </h3>
-              <p className="text-yellow-700 font-bold mb-3">
-                {user.planType === 'Free' 
+              <p className="text-content-secondary font-bold mb-3">
+                {user.planType === 'Free'
                   ? 'Image generation is only available for paid subscribers. Upgrade now to start creating!'
-                  : 'Your subscription has expired. Renew your plan to continue generating images.'}
+                  : 'Your subscription has expired and you have no remaining credits. Renew your plan to continue generating images.'}
               </p>
               <button
                 onClick={() => onNavigate('pricing')}
-                className="px-6 py-3 bg-yellow-600 text-white font-black rounded-xl hover:bg-yellow-700 transition-colors"
+                className="px-6 py-3 bg-feedback-warning text-content-inverse font-black rounded-xl hover:opacity-90 transition-colors"
               >
                 {user.planType === 'Free' ? 'View Plans & Pricing' : 'Renew Subscription'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Expired but has remaining credits */}
+      {!hasActivePaidPlan(user) && hasRemainingCredits(user) && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-center gap-3">
+            <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-blue-800 font-semibold text-sm">
+              Your subscription has expired, but you still have <span className="font-black">{user.tokenBalance} credits</span> remaining. You can continue generating until they run out.
+            </p>
+            <button
+              onClick={() => onNavigate('pricing')}
+              className="ml-auto px-4 py-2 text-sm bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              Renew Plan
+            </button>
           </div>
         </div>
       )}
@@ -312,18 +331,18 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
         </div>
       ) : (
         <>
-          <div className="max-w-2xl mx-auto mb-6 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-[10px] font-black text-gray-400 mb-3 text-center uppercase tracking-[0.2em]">Select Your Model</h3>
+          <div className="max-w-2xl mx-auto mb-6 bg-surface p-3 rounded-xl shadow-sm border border-border">
+            <h3 className="text-[10px] font-black text-content-disabled mb-3 text-center uppercase tracking-[0.2em]">Select Your Model</h3>
             <div className="flex justify-center gap-2 mb-2">
               <button
                 onClick={() => setUseCustomModel(false)}
-                className={`flex-1 px-4 py-2 rounded-lg font-bold border text-xs transition-all ${!useCustomModel ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
+                className={`flex-1 px-4 py-2 rounded-lg font-bold border text-xs transition-all ${!useCustomModel ? 'bg-primary text-content-inverse border-primary shadow-md' : 'bg-surface text-content-secondary hover:bg-surface-secondary border-border'}`}
               >
                 Studio Kid Model
               </button>
               <button
                 onClick={() => setUseCustomModel(true)}
-                className={`flex-1 px-4 py-2 rounded-lg font-bold border text-xs transition-all ${useCustomModel ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
+                className={`flex-1 px-4 py-2 rounded-lg font-bold border text-xs transition-all ${useCustomModel ? 'bg-primary text-content-inverse border-primary shadow-md' : 'bg-surface text-content-secondary hover:bg-surface-secondary border-border'}`}
               >
                 Personal Photo
               </button>
@@ -345,39 +364,57 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto mb-6">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="font-semibold text-xs text-gray-400 mb-2 uppercase tracking-widest">Gender</h3>
+            <div className="bg-surface p-4 rounded-lg shadow-md">
+              <h3 className="font-semibold text-xs text-content-disabled mb-2 uppercase tracking-widest">Gender</h3>
               <div className="flex gap-2">
                 {['boy', 'girl'].map((g) => (
-                  <button key={g} onClick={() => handleGenderChange(g as KidsGender)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${gender === g ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{g.toUpperCase()}</button>
+                  <button key={g} onClick={() => handleGenderChange(g as KidsGender)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${gender === g ? 'bg-secondary text-content-inverse shadow-sm' : 'bg-surface-tertiary text-content-secondary hover:bg-interactive-hover'}`}>{g.toUpperCase()}</button>
                 ))}
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="font-semibold text-xs text-gray-400 mb-2 uppercase tracking-widest">Age</h3>
+            <div className="bg-surface p-4 rounded-lg shadow-md">
+              <h3 className="font-semibold text-xs text-content-disabled mb-2 uppercase tracking-widest">Age</h3>
               <div className="flex gap-2">
                 {['2-3', '5', '7-9', '10-14'].map((a) => (
-                  <button key={a} onClick={() => setAgeGroup(a as KidsAgeGroup)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${ageGroup === a ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{a} YRS</button>
+                  <button key={a} onClick={() => setAgeGroup(a as KidsAgeGroup)} className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${ageGroup === a ? 'bg-secondary text-content-inverse shadow-sm' : 'bg-surface-tertiary text-content-secondary hover:bg-interactive-hover'}`}>{a} YRS</button>
                 ))}
               </div>
             </div>
           </div>
 
           {/* Hair Style Selection */}
-          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-50 max-w-5xl mx-auto mb-6">
-            <h3 className="font-semibold text-lg text-gray-700 mb-4 text-center">Hair Style</h3>
-            <div className="flex flex-wrap justify-center gap-2">
+          <div className="bg-surface p-5 rounded-xl shadow-md border border-border max-w-5xl mx-auto mb-6">
+            <h3 className="font-semibold text-lg text-content-secondary mb-4 text-center">Hair Style</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2">
               {hairStyleOptions.map((style) => (
                 <button
                   key={style.id}
                   onClick={() => setSelectedHairStyle(style)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
                     selectedHairStyle.id === style.id
-                      ? 'bg-primary text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary text-content-inverse shadow-md'
+                      : 'bg-surface-tertiary text-content-secondary hover:bg-interactive-hover'
                   }`}
                 >
-                  {style.name}
+                  {style.image ? (
+                    <img
+                      src={style.image}
+                      alt={style.name}
+                      className={`w-32 h-32 rounded-lg object-cover mb-1 border-2 ${
+                        selectedHairStyle.id === style.id ? 'border-white' : 'border-transparent'
+                      }`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className={`w-12 h-12 rounded-lg mb-1 flex items-center justify-center ${
+                      selectedHairStyle.id === style.id ? 'bg-white/20' : 'bg-gray-100'
+                    }`}>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121A3 3 0 1 0 9.88 9.88m4.242 4.242L9.878 9.879m4.243 4.242a3 3 0 0 1-4.243 0M9.879 9.879a3 3 0 0 1 4.242 0M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                      </svg>
+                    </div>
+                  )}
+                  <span className="text-xs font-medium text-center leading-tight">{style.name}</span>
                 </button>
               ))}
             </div>
@@ -397,16 +434,16 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
 
           {/* Bottom Type Selector */}
           {shouldShowBottomSelector && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 max-w-5xl mx-auto">
+            <div className="bg-surface-secondary border-2 border-border-secondary rounded-2xl p-6 max-w-5xl mx-auto">
               <div className="flex items-center gap-2 mb-3">
-                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-content">
                   No Bottom Uploaded - Select Default Bottom Type
                 </h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-content-secondary mb-4">
                 Since you haven't uploaded a bottom, choose what type of bottom should appear on the model:
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -416,8 +453,8 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
                     onClick={() => setSelectedBottomType(bottomType)}
                     className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
                       selectedBottomType?.id === bottomType.id
-                        ? 'border-blue-600 bg-blue-100 text-blue-900'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'
+                        ? 'border-primary bg-surface-tertiary text-content'
+                        : 'border-border bg-surface text-content-secondary hover:border-border-secondary'
                     }`}
                   >
                     {bottomType.name}
@@ -425,7 +462,7 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
                 ))}
               </div>
               {selectedBottomType && (
-                <p className="text-xs text-green-600 mt-3 font-medium flex items-center gap-1">
+                <p className="text-xs text-feedback-success mt-3 font-medium flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -459,16 +496,16 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
             
             {/* CRITICAL: Access Warning Display */}
             {accessWarning && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 max-w-xl mx-auto">
+              <div className="mb-4 p-4 bg-feedback-error-light border border-feedback-error rounded-xl animate-in fade-in slide-in-from-bottom-2 max-w-xl mx-auto">
                 <div className="flex items-start gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-feedback-error flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  <p className="text-red-600 font-bold text-sm flex-1">{accessWarning}</p>
+                  <p className="text-feedback-error font-bold text-sm flex-1">{accessWarning}</p>
                 </div>
               </div>
             )}
-            
+
             {/* CRITICAL: Smart Generate Button */}
             <GenerateButton
               user={user}
@@ -480,8 +517,8 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
               onNavigateToAddons={() => onNavigate('add-on-credits')}
               className="w-full max-w-xs mt-4 px-8 py-4 font-bold rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50"
             />
-            
-            {error && <p className="text-red-500 mt-4 font-bold">{error}</p>}
+
+            {error && <p className="text-feedback-error mt-4 font-bold">{error}</p>}
           </div>
         </>
       )}

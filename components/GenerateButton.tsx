@@ -2,6 +2,7 @@ import React from 'react';
 import { User } from '../types';
 import {
     hasActivePaidPlan,
+    hasRemainingCredits,
     canUseQuality,
     getCreditCost,
     validateGenerationAttempt
@@ -53,8 +54,8 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({
             return 'Generating...';
         }
         
-        // Check if user has active plan
-        if (!hasActivePaidPlan(user)) {
+        // Check if user has active plan or remaining credits
+        if (!hasActivePaidPlan(user) && !hasRemainingCredits(user)) {
             if (user.planType === 'Free') {
                 return 'Upgrade to Generate';
             }
@@ -79,22 +80,22 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({
     };
     
     const getButtonStyle = (): string => {
-        const baseStyle = className || 'w-full max-w-xs mt-4 px-8 py-4 font-black rounded-xl shadow-2xl transition-all active:scale-95 ring-4 ring-white disabled:opacity-50';
-        
+        const baseStyle = className || 'w-full max-w-xs mt-4 px-8 py-4 font-black rounded-xl shadow-2xl transition-all active:scale-95 ring-4 ring-surface disabled:opacity-50';
+
         // Different colors based on state
-        if (!hasActivePaidPlan(user)) {
-            return `${baseStyle} bg-primary text-white hover:bg-indigo-800`; // Upgrade needed
+        if (!hasActivePaidPlan(user) && !hasRemainingCredits(user)) {
+            return `${baseStyle} bg-primary text-content-inverse hover:bg-interactive-hover`; // Upgrade needed
         }
-        
+
         if (!canUseQuality(user, quality)) {
-            return `${baseStyle} bg-orange-600 text-white hover:bg-orange-700`; // Quality upgrade needed
+            return `${baseStyle} bg-secondary text-content-inverse hover:bg-interactive-hover`; // Quality upgrade needed
         }
-        
+
         if (user.tokenBalance < creditsNeeded) {
-            return `${baseStyle} bg-yellow-600 text-white hover:bg-yellow-700`; // Credits needed
+            return `${baseStyle} bg-content-tertiary text-content-inverse hover:bg-content-secondary`; // Credits needed
         }
-        
-        return `${baseStyle} bg-accent text-white hover:bg-pink-600`; // Ready to generate
+
+        return `${baseStyle} bg-primary text-content-inverse hover:bg-interactive-hover`; // Ready to generate
     };
     
     return (

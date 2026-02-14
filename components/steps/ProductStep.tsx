@@ -371,7 +371,7 @@ const ProductStep: React.FC<ProductStepProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { id: 'jasmine', label: 'Jasmine', image: jasmineBg },
-              { id: 'bangles', label: 'Temple Gold', image: TempleGold },
+              { id: 'bangles', label: 'Bangles', image: TempleGold },
               { id: 'necklace', label: 'Haaram', image: Haaram }
             ].map(acc => (
               <div
