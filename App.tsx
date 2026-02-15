@@ -1,5 +1,5 @@
 // frontend/App.tsx
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import { Page, User, PaymentStatus, PlanType } from "./types";
 import TryOnWizard from "./components/TryOnWizard";
 import HomePage from "./components/HomePage";
@@ -197,39 +197,49 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Use ref to avoid recreating polling interval on every user change
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  // Fetch fresh user profile from server and update state
+  const refreshUserProfile = useCallback(async () => {
+    try {
+      const { user: profile } = await getCurrentUserProfile();
+      const current = userRef.current;
+      if (!current) return;
+
+      const newCredits = profile.creditsBalance || 0;
+      const currentCredits = current.creditsBalance ?? current.tokenBalance ?? 0;
+
+      if (
+        newCredits !== currentCredits ||
+        profile.planType !== current.planType ||
+        profile.paymentStatus !== current.paymentStatus ||
+        profile.isActive !== current.isActive
+      ) {
+        const mapped = mapBackendUserToFrontend(profile);
+        setUser(mapped);
+        setStoredUser(mapped);
+      }
+    } catch {
+      // Silently ignore — apiClient handles 401s
+    }
+  }, []);
+
   // Poll user profile for credit/plan changes (e.g. admin adding credits)
   useEffect(() => {
     if (!user || user.role === 'admin') return;
 
-    const pollProfile = async () => {
+    const pollProfile = () => {
       if (document.visibilityState !== 'visible') return;
-      try {
-        const { user: profile } = await getCurrentUserProfile();
-        const newCredits = profile.creditsBalance || 0;
-        const currentCredits = user.creditsBalance ?? user.tokenBalance ?? 0;
-
-        if (newCredits !== currentCredits) {
-          handleCreditsUpdate(newCredits);
-        }
-
-        // Detect plan/status changes
-        if (
-          profile.planType !== user.planType ||
-          profile.paymentStatus !== user.paymentStatus ||
-          profile.isActive !== user.isActive
-        ) {
-          handleUserUpdate(profile);
-        }
-      } catch {
-        // Silently ignore — apiClient handles 401s
-      }
+      refreshUserProfile();
     };
 
-    const interval = setInterval(pollProfile, 60000);
+    const interval = setInterval(pollProfile, 30000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        pollProfile();
+        refreshUserProfile();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
@@ -238,11 +248,15 @@ const App: React.FC = () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [user]);
+  }, [user?.id, user?.role]);
 
-  // Scroll to top when page changes
+  // Scroll to top and refresh credits when page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // Refresh user profile on navigation to keep credits in sync
+    if (userRef.current && userRef.current.role !== 'admin') {
+      refreshUserProfile();
+    }
   }, [page]);
 
   // Global navigation events
@@ -319,17 +333,20 @@ const App: React.FC = () => {
   };
 
   // Update user credits in real-time after generation
-  const handleCreditsUpdate = (newCredits: number) => {
-    if (user) {
+  const handleCreditsUpdate = useCallback((newCredits: number) => {
+    const current = userRef.current;
+    if (current) {
       const updatedUser = {
-        ...user,
+        ...current,
         tokenBalance: newCredits,
         creditsBalance: newCredits
       };
       setUser(updatedUser);
       setStoredUser(updatedUser);
     }
-  };
+    // Also fetch fresh profile from server to ensure consistency
+    refreshUserProfile();
+  }, [refreshUserProfile]);
 
  const renderPage = () => {
     if (isMaintenance && user?.role !== "admin") {

@@ -419,8 +419,7 @@ const StepWizard: React.FC<StepWizardProps> = ({
                                 className="group p-3 bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 rounded-xl border-2 border-yellow-200 hover:border-yellow-300 transition-all cursor-pointer"
                                 onClick={() => {
                                   if (onLoadPreset) {
-                                    onLoadPreset(recPreset.preset_data);
-                                    setCurrentPresetName(recPreset.name);
+                                    onLoadPreset({ ...recPreset.preset_data, name: recPreset.name });
                                     setShowPresetModal(false);
                                   }
                                 }}
