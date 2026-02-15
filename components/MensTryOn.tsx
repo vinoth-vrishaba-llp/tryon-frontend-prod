@@ -198,7 +198,8 @@ const MensTryOn: React.FC<MensTryOnProps> = ({ user, onNavigate, onCreditsUpdate
       );
 
       setGenStage(GenerationStage.FINALIZING);
-      const imageUrl = `data:image/png;base64,${response.image}`;
+      const mimeType = response.mimeType || 'image/png';
+      const imageUrl = `data:${mimeType};base64,${response.image}`;
       await saveImageToHistory(imageUrl, `Men's ${MEN_CATEGORIES.find(c => c.id === category)?.name}`, response.creditsUsed, useCustomModel && customModelImage ? customModelImage.file : undefined);
       setGeneratedImage(imageUrl);
 

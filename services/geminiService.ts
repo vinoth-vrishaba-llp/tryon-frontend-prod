@@ -25,6 +25,7 @@ const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
  */
 export interface TryOnGenerationResponse {
     image: string;
+    mimeType?: string;
     creditsUsed: number;
     creditsRemaining: number;
 }
@@ -146,6 +147,7 @@ export const generateTryOnImage = async (
         // Return full response with credit information
         return {
             image: data.image,
+            mimeType: data.mimeType,
             creditsUsed: data.creditsUsed,
             creditsRemaining: data.creditsRemaining
         };

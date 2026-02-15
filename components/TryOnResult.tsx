@@ -36,7 +36,8 @@ const TryOnResult: React.FC<TryOnResultProps> = ({
   const downloadImage = () => {
     const link = document.createElement('a');
     link.href = imageUrl;
-    link.download = `virtual-try-on-result-${Date.now()}.png`;
+    const ext = imageUrl.startsWith('data:image/jpeg') ? 'jpg' : 'png';
+    link.download = `virtual-try-on-result-${Date.now()}.${ext}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

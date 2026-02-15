@@ -99,7 +99,8 @@ const JewelleryTryOn: React.FC<JewelleryTryOnProps> = ({ user, onNavigate, onCre
       );
 
       setGenStage(GenerationStage.FINALIZING);
-      const imageUrl = `data:image/png;base64,${response.image}`;
+      const mimeType = response.mimeType || 'image/png';
+      const imageUrl = `data:${mimeType};base64,${response.image}`;
       await saveImageToHistory(imageUrl, "Jewellery", response.creditsUsed, useCustomModel && customModelImage ? customModelImage.file : undefined);
       setGeneratedImage(imageUrl);
 

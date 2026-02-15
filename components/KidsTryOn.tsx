@@ -205,7 +205,8 @@ const KidsTryOn: React.FC<KidsTryOnProps> = ({ user, onNavigate, onCreditsUpdate
       );
 
       setGenStage(GenerationStage.FINALIZING);
-      const imageUrl = `data:image/png;base64,${response.image}`;
+      const mimeType = response.mimeType || 'image/png';
+      const imageUrl = `data:${mimeType};base64,${response.image}`;
       await saveImageToHistory(imageUrl, "Kids' Apparel", response.creditsUsed, useCustomModel && customModelImage ? customModelImage.file : undefined);
       setGeneratedImage(imageUrl);
 

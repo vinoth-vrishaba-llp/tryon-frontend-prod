@@ -178,7 +178,8 @@ const WomensTryOn: React.FC<WomensTryOnProps> = ({ user, onNavigate, onCreditsUp
       );
 
       setGenStage(GenerationStage.FINALIZING);
-      const imageUrl = `data:image/png;base64,${response.image}`;
+      const mimeType = response.mimeType || 'image/png';
+      const imageUrl = `data:${mimeType};base64,${response.image}`;
       await saveImageToHistory(imageUrl, "Women's Apparel", response.creditsUsed, useCustomModel && customModelImage ? customModelImage.file : undefined);
       setGeneratedImage(imageUrl);
 
