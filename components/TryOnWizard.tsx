@@ -976,6 +976,23 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentStep, isGenerationDisabled]);
 
+  // Memoized callbacks for EnvironmentStep to prevent unnecessary re-renders
+  const handleTimeChange = useCallback((t: any) => updateConfig({ time: t }), [updateConfig]);
+  const handleCameraChange = useCallback((c: any) => updateConfig({ camera: c }), [updateConfig]);
+  const handleQualityChange = useCallback((q: any) => updateConfig({ quality: q }), [updateConfig]);
+  const handleBackgroundChangeConfig = useCallback((b: any) => updateConfig({ background: b }), [updateConfig]);
+  const handleNavigateToPricing = useCallback(() => onNavigate('pricing'), [onNavigate]);
+  const handleNavigateToAddons = useCallback(() => onNavigate('add-on-credits'), [onNavigate]);
+
+  const backgroundOptionsForCategory = useMemo(() =>
+    category === 'women' ? BACKGROUND_OPTIONS_WOMEN :
+    category === 'men' ? BACKGROUND_OPTIONS_MEN :
+    category === 'kids' ? BACKGROUND_OPTIONS_KIDS :
+    category === 'jewellery' ? BACKGROUND_OPTIONS_JEWELLERY :
+    BACKGROUND_OPTIONS,
+    [category]
+  );
+
   // Show result page if generated
   if (generatedImage && !isLoading) {
     // Get product images for comparison
@@ -1044,23 +1061,6 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
       </div>
     );
   }
-
-  // Memoized callbacks for EnvironmentStep to prevent unnecessary re-renders
-  const handleTimeChange = useCallback((t: any) => updateConfig({ time: t }), [updateConfig]);
-  const handleCameraChange = useCallback((c: any) => updateConfig({ camera: c }), [updateConfig]);
-  const handleQualityChange = useCallback((q: any) => updateConfig({ quality: q }), [updateConfig]);
-  const handleBackgroundChangeConfig = useCallback((b: any) => updateConfig({ background: b }), [updateConfig]);
-  const handleNavigateToPricing = useCallback(() => onNavigate('pricing'), [onNavigate]);
-  const handleNavigateToAddons = useCallback(() => onNavigate('add-on-credits'), [onNavigate]);
-
-  const backgroundOptionsForCategory = useMemo(() =>
-    category === 'women' ? BACKGROUND_OPTIONS_WOMEN :
-    category === 'men' ? BACKGROUND_OPTIONS_MEN :
-    category === 'kids' ? BACKGROUND_OPTIONS_KIDS :
-    category === 'jewellery' ? BACKGROUND_OPTIONS_JEWELLERY :
-    BACKGROUND_OPTIONS,
-    [category]
-  );
 
   // Determine step can proceed
   const canProceed = currentStep === 0 ? isProductStepComplete : true;
