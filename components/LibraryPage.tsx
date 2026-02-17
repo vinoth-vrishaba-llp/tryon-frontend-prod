@@ -159,7 +159,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
       const selectedItems = history.filter(item => selectedIds.has(item.id));
       for (let i = 0; i < selectedItems.length; i++) {
         const item = selectedItems[i];
-        await handleDownload(item.imageUrl, item.category);
+        await handleDownload(item.id, item.imageUrl, item.category);
         // Small delay between downloads to avoid browser throttling
         if (i < selectedItems.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
@@ -170,7 +170,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
     }
   };
 
-  const handleDownload = async (imageUrl: string, category: string) => {
+  const handleDownload = async (itemId: string, imageUrl: string, category: string) => {
     // Strip query string before matching extension
     const urlPath = imageUrl.split('?')[0];
     const ext = urlPath.match(/\.(jpe?g|png|webp)$/i)?.[1] || 'png';
@@ -188,7 +188,23 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
     };
 
     try {
-      // Try direct fetch first (works for public R2 URLs with CORS)
+      // Primary: fetch through backend proxy (avoids CORS issues with R2)
+      const token = localStorage.getItem('auth_token');
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const response = await fetch(`${apiBaseUrl}/history/${itemId}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        triggerDownload(blob);
+        return;
+      }
+    } catch {
+      // Backend proxy not available - fall through to direct fetch
+    }
+
+    try {
+      // Fallback: direct fetch (works if R2 has CORS configured)
       const directResponse = await fetch(imageUrl, { mode: 'cors' });
       if (directResponse.ok) {
         const blob = await directResponse.blob();
@@ -196,35 +212,11 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
         return;
       }
     } catch {
-      // CORS blocked or network error - fall through to canvas fallback
+      // CORS blocked - fall through to last resort
     }
 
-    try {
-      // Fallback: load image into canvas to bypass CORS
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) { reject(new Error('Canvas context failed')); return; }
-          ctx.drawImage(img, 0, 0);
-          canvas.toBlob((b) => {
-            if (b) resolve(b);
-            else reject(new Error('Canvas toBlob failed'));
-          }, `image/${ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext}`);
-        };
-        img.onerror = () => reject(new Error('Image load failed'));
-        img.src = imageUrl;
-      });
-      triggerDownload(blob);
-    } catch (error) {
-      console.error('Download failed:', error);
-      // Last resort: open in new tab
-      window.open(imageUrl, '_blank');
-    }
+    // Last resort: open in new tab
+    window.open(imageUrl, '_blank');
   };
 
   const availableCategories = useMemo(() => {
@@ -566,7 +558,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDownload(item.imageUrl, item.category);
+                      handleDownload(item.id, item.imageUrl, item.category);
                     }}
                     className="absolute bottom-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded-full shadow-md transition-all z-10"
                     title="Download"
@@ -681,7 +673,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
               {/* Buttons row */}
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
-                  onClick={() => handleDownload(selectedImage.imageUrl, selectedImage.category)}
+                  onClick={() => handleDownload(selectedImage.id, selectedImage.imageUrl, selectedImage.category)}
                   className="flex items-center justify-center flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-indigo-800 transition-all"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
