@@ -151,12 +151,36 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
   };
 
   const handleDownload = async (imageUrl: string, category: string) => {
+    const ext = imageUrl.match(/\.(jpe?g|png|webp)$/i)?.[1] || 'png';
+    const filename = `${category || 'try-on'}-${Date.now()}.${ext}`;
+
+    const triggerDownload = (blob: Blob) => {
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    };
+
     try {
-      const filename = `${category || 'try-on'}-${Date.now()}.png`;
+      // Try direct fetch first (works for public R2 URLs with CORS)
+      const directResponse = await fetch(imageUrl);
+      if (directResponse.ok) {
+        const blob = await directResponse.blob();
+        triggerDownload(blob);
+        return;
+      }
+    } catch {
+      // CORS blocked or network error - fall through to proxy
+    }
+
+    try {
+      // Fallback: use backend proxy to bypass CORS
       const token = localStorage.getItem('auth_token');
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
-      // Use backend proxy to bypass CORS
       const proxyUrl = `${apiBaseUrl}/download-image?url=${encodeURIComponent(imageUrl)}&filename=${encodeURIComponent(filename)}`;
 
       const response = await fetch(proxyUrl, {
@@ -170,17 +194,9 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
       }
 
       const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
+      triggerDownload(blob);
     } catch (error) {
       console.error('Download failed:', error);
-      // Fallback: open in new tab
       window.open(imageUrl, '_blank');
     }
   };

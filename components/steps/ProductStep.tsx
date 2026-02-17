@@ -26,11 +26,12 @@ import {
   BOTTOM_TYPE_OPTIONS_KIDS
 } from '../../types';
 import ImageUploadCard from '../ImageUploadCard';
-import jasmineBg from '../../Image/jasmine.png';
-import TempleGold from '../../Image/Temple_gold.png';
-import Haaram from '../../Image/haaram.png';
+
 
 export type TryOnCategory = 'men' | 'women' | 'kids' | 'jewellery';
+const jasmine = "https://cdn.hyperreach.site/assets/accessories/jasmine.webp";
+const bangle = "https://cdn.hyperreach.site/assets/accessories/bangles.webp";
+const haaram = "https://cdn.hyperreach.site/assets/accessories/haaram.webp";
 
 interface ProductStepProps {
   category: TryOnCategory;
@@ -366,44 +367,34 @@ const ProductStep: React.FC<ProductStepProps> = ({
 
       {/* Women Saree Accessories */}
       {category === 'women' && womenCategory === 'saree' && accessories && toggleAccessory && (
-        <div className="bg-gray-50 p-4 rounded-xl border-l-4 border-accent">
+        <div className="bg-gray-50 p-3 rounded-xl border-l-4 border-accent">
           <h3 className="font-bold text-sm text-gray-800 mb-3">Accessories</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'jasmine', label: 'Jasmine', image: jasmineBg },
-              { id: 'bangles', label: 'Bangles', image: TempleGold },
-              { id: 'necklace', label: 'Haaram', image: Haaram }
+              { id: 'jasmine', label: 'Jasmine', image: jasmine },
+              { id: 'bangles', label: 'Bangles', image: bangle },
+              { id: 'necklace', label: 'Haaram', image: haaram }
             ].map(acc => (
               <div
                 key={acc.id}
-                className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                className={`py-2 px-2 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-center ${
                   accessories[acc.id as keyof SareeAccessoriesState]
                     ? 'bg-accent/5 border-accent shadow-sm'
                     : 'bg-white border-transparent opacity-60'
                 }`}
                 onClick={() => toggleAccessory(acc.id as keyof SareeAccessoriesState)}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-2">
                   <img
                     src={acc.image}
                     alt={acc.label}
-                    className="w-10 h-10 object-cover rounded-md border border-gray-200"
+                    className="w-full aspect-square object-cover rounded-md border border-gray-200"
                   />
                   <span className="text-xs font-black text-gray-700 uppercase tracking-tighter">
                     {acc.label}
                   </span>
                 </div>
-                <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
-                  accessories[acc.id as keyof SareeAccessoriesState]
-                    ? 'bg-accent border-accent'
-                    : 'bg-white border-gray-300'
-                }`}>
-                  {accessories[acc.id as keyof SareeAccessoriesState] && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
+                
               </div>
             ))}
           </div>

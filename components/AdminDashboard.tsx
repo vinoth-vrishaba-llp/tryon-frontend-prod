@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { User, AdminDashboardData, Report } from '../types';
-import { getAdminDashboardData, toggleMaintenanceMode, sendBroadcastEmail, toggleUserStatus } from '../services/dashboardService';
+import { getAdminDashboardData, toggleMaintenanceMode, sendBroadcastEmail, toggleUserStatus, triggerHistoryCleanup } from '../services/dashboardService';
 import { getUnreadReportsCount, markAllReportsAsRead } from '../services/reportService';
 import AdminManualCreditsModal from './AdminManualCreditsModal';
 import ReportsList from './admin/ReportsList';
@@ -38,6 +38,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
         action: 'suspend' | 'activate';
     }>({ isOpen: false, user: null, action: 'suspend' });
     const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+
+    // Cleanup State
+    const [cleanupModal, setCleanupModal] = useState(false);
+    const [isCleaningUp, setIsCleaningUp] = useState(false);
+    const [cleanupResult, setCleanupResult] = useState<{ success: boolean; message: string } | null>(null);
 
     // Tab State
     const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'recommended-presets'>('dashboard');
@@ -150,6 +155,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
             alert(`Failed to ${suspendModal.action} user: ${err.message}`);
         } finally {
             setIsTogglingStatus(false);
+        }
+    };
+
+    const handleCleanupHistory = async () => {
+        setIsCleaningUp(true);
+        setCleanupResult(null);
+        try {
+            const result = await triggerHistoryCleanup();
+            setCleanupResult({ success: true, message: result.message });
+            // Refresh dashboard data to update total images count
+            const refreshed = await getAdminDashboardData();
+            setData(refreshed);
+        } catch (err: any) {
+            setCleanupResult({ success: false, message: err.message || 'Cleanup failed' });
+        } finally {
+            setIsCleaningUp(false);
         }
     };
 
@@ -404,6 +425,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                                 </svg>
                                 Manual Add Credits
                             </button>
+                            <button
+                                onClick={() => { setCleanupResult(null); setCleanupModal(true); }}
+                                className="w-full py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all text-sm flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Cleanup Old Images (30+ days)
+                            </button>
                             <button className="w-full py-2 border border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-50 transition-all text-sm">
                                 Rotate API Keys
                             </button>
@@ -558,6 +588,65 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                 users={data.users}
                 onCreditsAdded={handleManualCreditsAdded}
             />
+
+            {/* Cleanup History Confirmation Modal */}
+            {cleanupModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={() => !isCleaningUp && setCleanupModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6 text-center">
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100">
+                                <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                Delete Old Images?
+                            </h3>
+                            <p className="text-gray-600 mb-4">
+                                This will permanently delete all generated images and history records older than 30 days. This action cannot be undone.
+                            </p>
+                            {cleanupResult && (
+                                <div className={`p-3 rounded-lg mb-4 ${cleanupResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                    <p className={`text-sm font-bold ${cleanupResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                                        {cleanupResult.message}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => setCleanupModal(false)}
+                                disabled={isCleaningUp}
+                                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
+                            >
+                                {cleanupResult?.success ? 'Close' : 'Cancel'}
+                            </button>
+                            {!cleanupResult?.success && (
+                                <button
+                                    onClick={handleCleanupHistory}
+                                    disabled={isCleaningUp}
+                                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isCleaningUp ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        'Delete Old Images'
+                                    )}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Suspend/Activate User Confirmation Modal */}
             {suspendModal.isOpen && suspendModal.user && (

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   ImageFile,
   ProductUploadType,
@@ -33,8 +33,8 @@ import EnvironmentStep from './steps/EnvironmentStep';
 import TryOnResult from './TryOnResult';
 import { GenerationProgress, GenerationStage } from './HomePage';
 import { useConfig } from '../hooks/useConfig';
-import { generateTryOnImage } from '../services/geminiService';
-import { saveImageToHistory } from '../historyManager';
+import { generateTryOnImage, getGenerationStatus } from '../services/geminiService';
+
 import { clearAuth } from '../services/apiClient';
 import { validateGenerationAttempt, hasActivePaidPlan, hasRemainingCredits } from '../services/authService';
 import {
@@ -123,14 +123,6 @@ const getCategorySubtitle = (category: TryOnCategory): string => {
   }
 };
 
-const getCategoryHistoryLabel = (category: TryOnCategory): string => {
-  switch (category) {
-    case 'men': return "Men's Apparel";
-    case 'women': return "Women's Apparel";
-    case 'kids': return "Kids' Apparel";
-    case 'jewellery': return "Jewellery";
-  }
-};
 
 const TryOnWizard: React.FC<TryOnWizardProps> = ({
   user,
@@ -206,6 +198,9 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
   // AbortController for cancellation
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Recovery polling ref for reload recovery
+  const recoveryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Preset state
   const [presets, setPresets] = useState<PresetData[]>([]);
   const [recommendedPresets, setRecommendedPresets] = useState<RecommendedPreset[]>([]);
@@ -263,6 +258,99 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
     };
     fetchPresets();
   }, [category]);
+
+  // Recovery polling: resume loading state if page was reloaded during generation
+  useEffect(() => {
+    const stored = sessionStorage.getItem('generationInProgress');
+    if (!stored) return;
+
+    let parsed: { timestamp: number };
+    try {
+      parsed = JSON.parse(stored);
+    } catch {
+      sessionStorage.removeItem('generationInProgress');
+      return;
+    }
+
+    const age = Date.now() - parsed.timestamp;
+
+    // Discard if older than 3 minutes
+    if (age > 3 * 60 * 1000) {
+      sessionStorage.removeItem('generationInProgress');
+      return;
+    }
+
+    // Resume loading state
+    setIsLoading(true);
+    setGenStage(GenerationStage.CRAFTING);
+    setError(null);
+
+    let pollCount = 0;
+    const maxPolls = 60; // 60 * 3s = 3 min timeout
+
+    const poll = setInterval(async () => {
+      pollCount++;
+
+      if (pollCount > maxPolls) {
+        clearInterval(poll);
+        recoveryPollRef.current = null;
+        sessionStorage.removeItem('generationInProgress');
+        setIsLoading(false);
+        setError('Generation recovery timed out. Please check your Library for recent results.');
+        return;
+      }
+
+      try {
+        const status = await getGenerationStatus();
+
+        if (status.status === 'completed') {
+          clearInterval(poll);
+          recoveryPollRef.current = null;
+          sessionStorage.removeItem('generationInProgress');
+
+          if (status.imageUrl) {
+            setGeneratedImage(status.imageUrl);
+          }
+          setGenStage(GenerationStage.FINALIZING);
+          setIsLoading(false);
+
+          if (status.creditsRemaining !== undefined) {
+            onCreditsUpdate(status.creditsRemaining);
+          }
+        } else if (status.status === 'failed') {
+          clearInterval(poll);
+          recoveryPollRef.current = null;
+          sessionStorage.removeItem('generationInProgress');
+          setIsLoading(false);
+          setError(status.error || 'Generation failed. Please try again.');
+        } else if (status.status === 'idle') {
+          // Server may have restarted — job lost but image may have been saved
+          clearInterval(poll);
+          recoveryPollRef.current = null;
+          sessionStorage.removeItem('generationInProgress');
+          setIsLoading(false);
+          setError('Generation status unavailable. Please check your Library for recent results.');
+        }
+        // status === 'processing' → keep polling
+      } catch (err: any) {
+        if (err.message === 'SESSION_EXPIRED') {
+          clearInterval(poll);
+          recoveryPollRef.current = null;
+          sessionStorage.removeItem('generationInProgress');
+          clearAuth();
+          window.location.href = '/';
+        }
+        // Other errors: keep polling, might be transient network issue
+      }
+    }, 3000);
+
+    recoveryPollRef.current = poll;
+
+    return () => {
+      clearInterval(poll);
+      recoveryPollRef.current = null;
+    };
+  }, []); // Run once on mount
 
   // Save current settings as a preset
   const handleSavePreset = async (name: string) => {
@@ -765,6 +853,7 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
     setGenStage(GenerationStage.INITIALIZING);
     setError(null);
     setAccessWarning(null);
+    sessionStorage.setItem('generationInProgress', JSON.stringify({ timestamp: Date.now() }));
 
     try {
       setGenStage(GenerationStage.ANALYZING);
@@ -800,31 +889,38 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
         abortControllerRef.current.signal
       );
 
-      setGenStage(GenerationStage.FINALIZING);
       const mimeType = response.mimeType || 'image/png';
       const imageUrl = `data:${mimeType};base64,${response.image}`;
-      await saveImageToHistory(
-        imageUrl,
-        getCategoryHistoryLabel(category),
-        response.creditsUsed,
-        useCustomModel && customModelImage ? customModelImage.file : undefined
-      );
+      setGenStage(GenerationStage.FINALIZING);
       setGeneratedImage(imageUrl);
+      setIsLoading(false);
+      sessionStorage.removeItem('generationInProgress');
 
       if (response.creditsRemaining !== undefined) {
         onCreditsUpdate(response.creditsRemaining);
       }
     } catch (e: any) {
-      // Handle cancellation - no error, no credits consumed
+      // Handle cancellation (user cancel OR page reload abort).
+      // Don't clear sessionStorage — page reload needs the flag to persist.
+      // Explicit user cancel already clears it in handleCancelGeneration().
       if (e.cancelled || e.message === 'GENERATION_CANCELLED') {
         setError(null);
         setAccessWarning(null);
         return;
       }
 
+      // Don't clear sessionStorage in catch — during page reload, browsers
+      // may throw TypeError instead of AbortError, which would land here.
+      // Recovery polling handles stale flags (backend returns 'idle'/'failed').
+
       if (e.message === 'SESSION_EXPIRED') {
         clearAuth();
         window.location.href = '/';
+        return;
+      }
+
+      if (e.conflict) {
+        setAccessWarning('A generation is already in progress. Please wait for it to complete.');
         return;
       }
 
@@ -844,6 +940,11 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
 
   // Handle cancel generation
   const handleCancelGeneration = () => {
+    if (recoveryPollRef.current) {
+      clearInterval(recoveryPollRef.current);
+      recoveryPollRef.current = null;
+    }
+    sessionStorage.removeItem('generationInProgress');
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -944,6 +1045,23 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
     );
   }
 
+  // Memoized callbacks for EnvironmentStep to prevent unnecessary re-renders
+  const handleTimeChange = useCallback((t: any) => updateConfig({ time: t }), [updateConfig]);
+  const handleCameraChange = useCallback((c: any) => updateConfig({ camera: c }), [updateConfig]);
+  const handleQualityChange = useCallback((q: any) => updateConfig({ quality: q }), [updateConfig]);
+  const handleBackgroundChangeConfig = useCallback((b: any) => updateConfig({ background: b }), [updateConfig]);
+  const handleNavigateToPricing = useCallback(() => onNavigate('pricing'), [onNavigate]);
+  const handleNavigateToAddons = useCallback(() => onNavigate('add-on-credits'), [onNavigate]);
+
+  const backgroundOptionsForCategory = useMemo(() =>
+    category === 'women' ? BACKGROUND_OPTIONS_WOMEN :
+    category === 'men' ? BACKGROUND_OPTIONS_MEN :
+    category === 'kids' ? BACKGROUND_OPTIONS_KIDS :
+    category === 'jewellery' ? BACKGROUND_OPTIONS_JEWELLERY :
+    BACKGROUND_OPTIONS,
+    [category]
+  );
+
   // Determine step can proceed
   const canProceed = currentStep === 0 ? isProductStepComplete : true;
 
@@ -1023,23 +1141,17 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
         );
 
       case 2:
-        const backgroundOptionsForCategory =
-          category === 'women' ? BACKGROUND_OPTIONS_WOMEN :
-          category === 'men' ? BACKGROUND_OPTIONS_MEN :
-          category === 'kids' ? BACKGROUND_OPTIONS_KIDS :
-          category === 'jewellery' ? BACKGROUND_OPTIONS_JEWELLERY :
-          BACKGROUND_OPTIONS;
         return (
           <EnvironmentStep
             user={user}
             selectedTime={config.time}
-            onTimeChange={(t) => updateConfig({ time: t })}
+            onTimeChange={handleTimeChange}
             selectedCamera={config.camera}
-            onCameraChange={(c) => updateConfig({ camera: c })}
+            onCameraChange={handleCameraChange}
             selectedQuality={config.quality}
-            onQualityChange={(q) => updateConfig({ quality: q })}
+            onQualityChange={handleQualityChange}
             selectedBackground={config.background}
-            onBackgroundChange={(b) => updateConfig({ background: b })}
+            onBackgroundChange={handleBackgroundChangeConfig}
             backgroundOptions={backgroundOptionsForCategory}
             imageFiles={getAllImageFiles}
             isGenerating={isLoading}
@@ -1048,8 +1160,8 @@ const TryOnWizard: React.FC<TryOnWizardProps> = ({
             error={error}
             onGenerate={handleGenerate}
             onCancel={handleCancelGeneration}
-            onNavigateToPricing={() => onNavigate('pricing')}
-            onNavigateToAddons={() => onNavigate('add-on-credits')}
+            onNavigateToPricing={handleNavigateToPricing}
+            onNavigateToAddons={handleNavigateToAddons}
           />
         );
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   TimeOption,
   CameraOption,
@@ -21,7 +21,7 @@ import {
   Building2,
   Trees,
   Home,
-  Heart
+  Heart, Baby
 } from 'lucide-react';
 
 const BackgroundCategoryIcons: Record<BackgroundCategory | 'all', React.FC<{ className?: string }>> = {
@@ -32,6 +32,7 @@ const BackgroundCategoryIcons: Record<BackgroundCategory | 'all', React.FC<{ cla
   nature: ({ className }) => <Trees className={className} />,
   traditional: ({ className }) => <Home className={className} />,
   wedding: ({ className }) => <Heart className={className} />,
+  kids: ({ className }) => <Baby className={className} />,
 };
 
 const BackgroundCategoryLabels: Record<BackgroundCategory | 'all', string> = {
@@ -42,6 +43,7 @@ const BackgroundCategoryLabels: Record<BackgroundCategory | 'all', string> = {
   nature: 'Nature',
   traditional: 'Traditional',
   wedding: 'Wedding',
+  kids: 'Kids'
 };
 
 interface EnvironmentStepProps {
@@ -90,29 +92,56 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
   onNavigateToAddons
 }) => {
   const [activeBackgroundCategory, setActiveBackgroundCategory] = useState<BackgroundCategory | 'all'>('all');
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
+  const loadingInitializedRef = useRef(false);
 
   // Use provided options or fall back to default
   const allBackgroundOptions = backgroundOptions || BACKGROUND_OPTIONS;
 
-  const backgroundCategories: (BackgroundCategory | 'all')[] = ['all', 'studio', 'heritage', 'urban', 'nature', 'traditional', 'wedding'];
+  // Initialize loading state for images that have URLs (only once)
+  useEffect(() => {
+    if (loadingInitializedRef.current) return;
+    const imageIds = allBackgroundOptions.filter(o => o.image).map(o => o.id);
+    if (imageIds.length > 0) {
+      setLoadingImages(new Set(imageIds));
+      loadingInitializedRef.current = true;
+    }
+  }, [allBackgroundOptions]);
 
-  const filteredBackgroundOptions = activeBackgroundCategory === 'all'
-    ? allBackgroundOptions
-    : allBackgroundOptions.filter(option => option.category === activeBackgroundCategory);
+  const handleImageLoad = useCallback((id: string) => {
+    setLoadingImages(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  // Build category tabs dynamically from the actual background options
+  const backgroundCategories = useMemo<(BackgroundCategory | 'all')[]>(
+    () => ['all', ...Array.from(new Set(allBackgroundOptions.map(o => o.category))) as BackgroundCategory[]],
+    [allBackgroundOptions]
+  );
+
+  const filteredBackgroundOptions = useMemo(
+    () => activeBackgroundCategory === 'all'
+      ? allBackgroundOptions
+      : allBackgroundOptions.filter(option => option.category === activeBackgroundCategory),
+    [allBackgroundOptions, activeBackgroundCategory]
+  );
 
   // Plan-restricted quality logic
-  const isQualityAllowed = (qualityId: string): boolean => {
+  const isQualityAllowed = useCallback((qualityId: string): boolean => {
     const planConfig = PLAN_CONFIG[user.planType];
     if (!planConfig) return false;
     return planConfig.allowedQualities.includes(qualityId);
-  };
+  }, [user.planType]);
 
-  const getQualityUpgradeMessage = (qualityId: string): string => {
+  const getQualityUpgradeMessage = useCallback((qualityId: string): string => {
     if (qualityId === 'high' || qualityId === 'ultra') {
       return 'Upgrade to Pro or Ultimate plan';
     }
     return '';
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -287,7 +316,7 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
               <button
                 key={option.id}
                 onClick={() => onBackgroundChange(option)}
-                className={`group relative rounded-xl overflow-hidden transition-all ${
+                className={`group relative rounded-xl overflow-hidden transition-shadow duration-150 ${
                   selectedBackground.id === option.id
                     ? 'ring-2 ring-primary ring-offset-2 shadow-lg'
                     : 'border border-border hover:border-border-secondary hover:shadow-md'
@@ -295,12 +324,29 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
               >
                 {/* Background Image or Placeholder */}
                 {option.image ? (
-                  <div className="aspect-[4/3] w-full">
+                  <div className="aspect-[4/3] w-full relative overflow-hidden bg-gray-100">
+                    {/* Shimmer skeleton — same as LibraryPage */}
+                    {loadingImages.has(option.id) && (
+                      <div className="absolute inset-0 bg-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200"></div>
+                        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                     <img
                       src={option.image}
                       alt={option.name}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover transition-opacity duration-200 ${
+                        loadingImages.has(option.id) ? 'opacity-0' : 'opacity-100'
+                      }`}
                       loading="lazy"
+                      decoding="async"
+                      onLoad={() => handleImageLoad(option.id)}
+                      onError={() => handleImageLoad(option.id)}
                     />
                   </div>
                 ) : (
@@ -415,4 +461,4 @@ const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
   );
 };
 
-export default EnvironmentStep;
+export default React.memo(EnvironmentStep);

@@ -8,7 +8,8 @@ import {
   Building2,
   Trees,
   Home,
-  Heart
+  Heart,
+  Baby
 } from 'lucide-react';
 
 interface BackgroundSelectorProps {
@@ -29,6 +30,7 @@ const CategoryIcons: Record<BackgroundCategory | 'all', React.FC<{ className?: s
   nature: ({ className }) => <Trees className={className} />,
   traditional: ({ className }) => <Home className={className} />,
   wedding: ({ className }) => <Heart className={className} />,
+  kids: ({ className }) => <Baby className={className} />,
 };
 
 const CategoryLabels: Record<BackgroundCategory | 'all', string> = {
@@ -39,6 +41,7 @@ const CategoryLabels: Record<BackgroundCategory | 'all', string> = {
   nature: 'Nature',
   traditional: 'Traditional',
   wedding: 'Wedding',
+  kids: 'kids',
 };
 
 const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({ options, selectedBackground, onBackgroundChange, onUndo, onRedo, canUndo, canRedo }) => {

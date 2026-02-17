@@ -124,7 +124,7 @@ const ModelStep: React.FC<ModelStepProps> = ({
     : poseOptions.filter(p => p.category === activePoseCategory);
 
   const previewPoses = (() => {
-    const basic = poseOptions.filter(p => p.category === 'standing').slice(0, 5);
+    const basic = poseOptions.filter(p => p.category === 'standing').slice(0, 4);
     if (!basic.find(p => p.id === selectedPose.id)) {
       basic.push(selectedPose);
     }
@@ -165,12 +165,12 @@ const ModelStep: React.FC<ModelStepProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ToggleOption
             label="Show Outfit Details Layer"
-            checked={true}
+             checked={true}
             onChange={() => {}}
           />
           <ToggleOption
             label="Highlight Fabric Texture"
-            checked={true}
+             checked={true}
             onChange={() => {}}
           />
         </div>
@@ -280,48 +280,78 @@ const ModelStep: React.FC<ModelStepProps> = ({
         </div>
       </div>
 
+     
       {/* Pose Selection */}
-      <div className="bg-gray-50 p-4 rounded-xl">
-        <div className="flex justify-between items-center mb-3">
-          <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Pose</h4>
-          <button
-            onClick={() => setShowPoseGallery(true)}
-            className="text-xs text-primary font-bold hover:underline flex items-center bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-          >
-            {React.createElement(CategoryIcons['all'], { className: "h-3 w-3 mr-1" })}
-            Open Pose Gallery
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {previewPoses.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => onPoseChange(option)}
-              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                selectedPose.id === option.id
-                  ? 'bg-secondary text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+<div className="bg-gray-50 p-4 rounded-xl">
+  <div className="flex justify-between items-center mb-3">
+    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Pose</h4>
+    <button
+      onClick={() => setShowPoseGallery(true)}
+      className="text-xs text-primary font-bold hover:underline flex items-center bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+    >
+      {React.createElement(CategoryIcons['all'], { className: "h-3 w-3 mr-1" })}
+      Open Pose Gallery
+    </button>
+  </div>
+  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2">
+    {(() => {
+      // Get first 7 poses
+      let displayPoses = poseOptions.slice(0, 7);
+      
+      // If selected pose is not in the first 7, replace the last one with selected pose
+      if (!displayPoses.find(p => p.id === selectedPose.id)) {
+        displayPoses = [...poseOptions.slice(0, 6), selectedPose];
+      }
+      
+      return displayPoses.map((option) => (
+        <button
+          key={option.id}
+          onClick={() => onPoseChange(option)}
+          className={`relative flex flex-col items-center p-2 rounded-lg transition-all ${
+            selectedPose.id === option.id
+              ? 'bg-secondary text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+          }`}
+        >
+          {option.image ? (
+            <img
+              src={option.image}
+              alt={option.name}
+              className={`w-32 h-32 rounded-lg object-cover mb-1 border-2 ${
+                selectedPose.id === option.id ? 'border-white' : 'border-transparent'
               }`}
-            >
-              {option.image && (
-                <img
-                  src={option.image}
-                  alt={option.name}
-                  className="w-8 h-8 rounded object-cover"
-                  loading="lazy"
-                />
-              )}
-              {option.name}
-            </button>
-          ))}
-          <button
-            onClick={() => setShowPoseGallery(true)}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-white text-primary border border-primary border-dashed hover:bg-indigo-50 transition-colors"
-          >
-            + More
-          </button>
-        </div>
-      </div>
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-lg mb-1 bg-gray-100 flex items-center justify-center">
+              <Users className="w-6 h-6" />
+            </div>
+          )}
+
+          {/* Checkmark indicator for selected pose */}
+          {selectedPose.id === option.id && (
+            <div className="absolute top-2 right-2 bg-white rounded-full p-0.5 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-secondary" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+
+          <span className="text-xs font-medium text-center leading-tight">
+            {option.name}
+          </span>
+        </button>
+      ));
+    })()}
+
+    <button
+      onClick={() => setShowPoseGallery(true)}
+      className="flex items-center justify-center rounded-lg border-2 border-dashed border-primary text-primary font-bold hover:bg-indigo-50 transition-colors text-sm"
+    >
+      View All
+    </button>
+  </div>
+</div>
 
       {/* Expression Selection */}
       <div className="bg-gray-50 p-4 rounded-xl">
@@ -405,7 +435,8 @@ const ModelStep: React.FC<ModelStepProps> = ({
           onClick={() => setShowPoseGallery(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
+            
+            className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] grid grid-rows-[auto_auto_1fr] overflow-hidden animate-in fade-in zoom-in duration-200"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
@@ -458,7 +489,7 @@ const ModelStep: React.FC<ModelStepProps> = ({
             )}
 
             <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {galleryPoses.map(pose => {
                   const PoseIcon = CategoryIcons[pose.category] || CategoryIcons.all;
                   return (
@@ -476,7 +507,7 @@ const ModelStep: React.FC<ModelStepProps> = ({
                     >
                       {/* Show image if available, otherwise show icon */}
                       {pose.image ? (
-                        <div className={`w-20 h-20 rounded-lg mb-3 overflow-hidden border-2 transition-all ${
+                        <div className={`w-32 h-32 rounded-lg mb-3 overflow-hidden border-2 transition-all ${
                           selectedPose.id === pose.id
                             ? 'border-primary shadow-lg'
                             : 'border-gray-200 group-hover:border-indigo-300'
@@ -501,9 +532,6 @@ const ModelStep: React.FC<ModelStepProps> = ({
                         selectedPose.id === pose.id ? 'text-primary' : 'text-gray-800'
                       }`}>
                         {pose.name}
-                      </span>
-                      <span className="text-xs text-center text-gray-500 line-clamp-2 px-2 leading-tight">
-                        {pose.prompt?.split(',')[0] || pose.prompt}
                       </span>
 
                       {selectedPose.id === pose.id && (

@@ -320,7 +320,7 @@ const ModelCustomizer: React.FC<ModelCustomizerProps> = ({
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <ToggleOption
                 label="Show Outfit Details Layer"
-                checked={true}
+               checked={true}
                 onChange={() => {}}
             />
             <ToggleOption

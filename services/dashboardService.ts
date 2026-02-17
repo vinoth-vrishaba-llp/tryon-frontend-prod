@@ -92,6 +92,13 @@ export const toggleUserStatus = async (userId: string, isActive: boolean): Promi
 };
 
 /**
+ * Trigger history cleanup - deletes images older than 30 days (admin only)
+ */
+export const triggerHistoryCleanup = async (): Promise<{ success: boolean; deletedCount: number; message: string }> => {
+    return apiClient.post('/admin/cleanup-history', {});
+};
+
+/**
  * Admin reset user password (admin only)
  * Directly changes a user's password without sending email
  */

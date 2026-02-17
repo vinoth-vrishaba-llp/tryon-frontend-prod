@@ -15,7 +15,7 @@ import {
     BodyTypeOption,
     BottomTypeOption
 } from "../types";
-import { getAuthHeadersForFormData } from "./apiClient";
+import { getAuthHeaders, getAuthHeadersForFormData } from "./apiClient";
 import { encryptData } from "./encryption";
 
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
@@ -29,6 +29,38 @@ export interface TryOnGenerationResponse {
     creditsUsed: number;
     creditsRemaining: number;
 }
+
+/**
+ * Response from generation status polling (reload recovery)
+ */
+export interface GenerationStatusResponse {
+    status: 'idle' | 'processing' | 'completed' | 'failed';
+    imageUrl?: string;
+    thumbnailUrl?: string;
+    creditsUsed?: number;
+    creditsRemaining?: number;
+    error?: string;
+}
+
+/**
+ * Poll backend for generation status (used for reload recovery)
+ */
+export const getGenerationStatus = async (): Promise<GenerationStatusResponse> => {
+    const response = await fetch(`${BACKEND_URL}/generation-status`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+
+    if (response.status === 401) {
+        throw new Error('SESSION_EXPIRED');
+    }
+
+    if (!response.ok) {
+        throw new Error('Failed to check generation status');
+    }
+
+    return response.json();
+};
 
 /**
  * Generate try-on image
@@ -134,6 +166,13 @@ export const generateTryOnImage = async (
             error.requiresCredits = errorData.requiresCredits;
             error.needed = errorData.needed;
             error.available = errorData.available;
+            throw error;
+        }
+
+        if (response.status === 409) {
+            const errorData = await response.json();
+            const error: any = new Error(errorData.error || 'Generation already in progress');
+            error.conflict = true;
             throw error;
         }
 
