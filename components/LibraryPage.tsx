@@ -36,6 +36,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
     type: 'single'
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isModalImageLoading, setIsModalImageLoading] = useState(false);
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
 
@@ -150,8 +151,29 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
     }
   };
 
+  // Handle bulk download
+  const handleBulkDownload = async () => {
+    if (selectedIds.size === 0 || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const selectedItems = history.filter(item => selectedIds.has(item.id));
+      for (let i = 0; i < selectedItems.length; i++) {
+        const item = selectedItems[i];
+        await handleDownload(item.imageUrl, item.category);
+        // Small delay between downloads to avoid browser throttling
+        if (i < selectedItems.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownload = async (imageUrl: string, category: string) => {
-    const ext = imageUrl.match(/\.(jpe?g|png|webp)$/i)?.[1] || 'png';
+    // Strip query string before matching extension
+    const urlPath = imageUrl.split('?')[0];
+    const ext = urlPath.match(/\.(jpe?g|png|webp)$/i)?.[1] || 'png';
     const filename = `${category || 'try-on'}-${Date.now()}.${ext}`;
 
     const triggerDownload = (blob: Blob) => {
@@ -167,36 +189,40 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
 
     try {
       // Try direct fetch first (works for public R2 URLs with CORS)
-      const directResponse = await fetch(imageUrl);
+      const directResponse = await fetch(imageUrl, { mode: 'cors' });
       if (directResponse.ok) {
         const blob = await directResponse.blob();
         triggerDownload(blob);
         return;
       }
     } catch {
-      // CORS blocked or network error - fall through to proxy
+      // CORS blocked or network error - fall through to canvas fallback
     }
 
     try {
-      // Fallback: use backend proxy to bypass CORS
-      const token = localStorage.getItem('auth_token');
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-      const proxyUrl = `${apiBaseUrl}/download-image?url=${encodeURIComponent(imageUrl)}&filename=${encodeURIComponent(filename)}`;
-
-      const response = await fetch(proxyUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Fallback: load image into canvas to bypass CORS
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('Canvas context failed')); return; }
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+            else reject(new Error('Canvas toBlob failed'));
+          }, `image/${ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext}`);
+        };
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = imageUrl;
       });
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
       triggerDownload(blob);
     } catch (error) {
       console.error('Download failed:', error);
+      // Last resort: open in new tab
       window.open(imageUrl, '_blank');
     }
   };
@@ -432,6 +458,20 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
                     Clear
                   </button>
                   <button
+                    onClick={handleBulkDownload}
+                    disabled={isDownloading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium disabled:opacity-50"
+                  >
+                    {isDownloading ? (
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    )}
+                    {isDownloading ? 'Downloading...' : `Download (${selectedIds.size})`}
+                  </button>
+                  <button
                     onClick={handleBulkDelete}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium"
                   >
@@ -522,6 +562,19 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ user, onNavigate }) => {
 
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                  {/* Download button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(item.imageUrl, item.category);
+                    }}
+                    className="absolute bottom-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded-full shadow-md transition-all z-10"
+                    title="Download"
+                  >
+                    <svg className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </button>
                   <p className="text-white text-sm font-bold truncate">{item.category || 'Try-On'}</p>
                   <p className="text-gray-300 text-xs">{formatDate(item.createdAt)}</p>
                   <p className="text-gray-400 text-xs">{item.creditsUsed} credits</p>
