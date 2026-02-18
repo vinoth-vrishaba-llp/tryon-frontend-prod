@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, PlanType } from '../types';
 import { hasActivePaidPlan } from '../services/authService';
-import logo from '../Image/TryOn.png';
+import logo from '../Image/logo-tryon.webp';
 
 interface HeaderProps {
   onHomeClick: () => void;
@@ -88,9 +88,9 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, showHomeButton, user, onLo
             <img
               src={logo}
               alt="TryON Logo"
-              className="h-12 w-15 object-contain"
+              className="w-28 object-contain"
             />
-            <h1 className="text-xl md:text-3xl font-extrabold text-primary leading-snug -ml-1">TryON</h1>
+           
           </button>
 
           {/* Mobile Menu Button */}
