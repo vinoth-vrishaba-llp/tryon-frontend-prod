@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Report, ReportStatus, ISSUE_CATEGORIES } from '../types';
 import { getUserReports } from '../services/reportService';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface UserReportsListProps {
   onSelectReport: (report: Report) => void;
@@ -69,8 +70,10 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ onSelectReport, refre
     }
   };
 
-  const getFeedbackIcon = (feedbackType: 'like' | 'dislike'): string => {
-    return feedbackType === 'like' ? '👍' : '👎';
+  const getFeedbackIcon = (feedbackType: 'like' | 'dislike') => {
+    return feedbackType === 'like'
+      ? <ThumbsUp size={20} className="text-green-600" />
+      : <ThumbsDown size={20} className="text-red-600" />;
   };
 
   const getIssueCategoryLabel = (categoryValue: string): string => {
@@ -176,7 +179,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ onSelectReport, refre
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{getFeedbackIcon(report.feedbackType)}</span>
+                    {getFeedbackIcon(report.feedbackType)}
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(report.status)}`}>
                       {report.status}
                     </span>
@@ -230,7 +233,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ onSelectReport, refre
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-2xl">{getFeedbackIcon(report.feedbackType)}</span>
+                      {getFeedbackIcon(report.feedbackType)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">

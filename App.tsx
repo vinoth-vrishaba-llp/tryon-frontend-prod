@@ -118,6 +118,8 @@ const App: React.FC = () => {
       subscriptionEnd: backendUser.subscriptionEnd,
       subscriptionExpiry: backendUser.subscriptionEnd,
 
+      avatar: backendUser.avatar,
+
       fullName: backendUser.fullName,
       creditsBalance: backendUser.creditsBalance,
       isActive: backendUser.isActive,
@@ -488,6 +490,13 @@ const App: React.FC = () => {
         showHomeButton={page !== "home"}
         user={user}
         onLogout={handleLogout}
+        onAvatarChange={(avatarId) => {
+          if (user) {
+            const updatedUser = { ...user, avatar: avatarId };
+            setUser(updatedUser);
+            setStoredUser(updatedUser);
+          }
+        }}
       />
       <main
         className={`p-4 sm:p-6 lg:p-8 transition-opacity duration-300 ${

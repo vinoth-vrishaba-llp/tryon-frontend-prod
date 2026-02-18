@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Report, ReportStatus, ISSUE_CATEGORIES } from '../../types';
 import { updateReportStatus, updateReportNotes } from '../../services/reportService';
+import { ThumbsUp, ThumbsDown, X } from 'lucide-react';
 
 interface ReportDetailsProps {
   report: Report;
@@ -94,9 +95,7 @@ const ReportDetails: React.FC<ReportDetailsProps> = ({ report, onClose, onUpdate
             onClick={onClose}
             className="ml-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={24} />
           </button>
         </div>
 
@@ -140,7 +139,10 @@ const ReportDetails: React.FC<ReportDetailsProps> = ({ report, onClose, onUpdate
               <div className="space-y-2 text-sm">
                 <div className="flex items-center">
                   <span className="text-gray-600 min-w-[80px]">Feedback:</span>
-                  <span className="text-2xl">{report.feedbackType === 'like' ? '👍' : '👎'}</span>
+                  {report.feedbackType === 'like'
+                    ? <ThumbsUp size={20} className="text-green-600" />
+                    : <ThumbsDown size={20} className="text-red-600" />
+                  }
                 </div>
                 <div className="flex">
                   <span className="text-gray-600 min-w-[80px]">Section:</span>

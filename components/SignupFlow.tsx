@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { signupStepOne, signupStepTwo, getStepOneData, clearSignupData } from '../services/authService';
+import { signupStepOne, signupStepTwo, getStepOneData, clearSignupData, updateAvatar } from '../services/authService';
 import { SignupData, User } from '../types';
+import { AvatarId } from '../constants/avatars';
+import AvatarPicker from './AvatarPicker';
 import loginBg from '../Image/bg.jpg';
 import { User as UserIcon, Mail, Phone, Globe, Lock } from 'lucide-react';
 
@@ -10,7 +12,7 @@ interface SignupFlowProps {
 }
 
 const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLogin }) => {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [formData, setFormData] = useState<SignupData>({
     fullName: '',
     brandName: '',
@@ -23,6 +25,8 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>();
+  const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(null);
 
   // Check if we have stored step one data on mount
   React.useEffect(() => {
@@ -95,7 +99,8 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
       console.log('Submitting step 2 with email:', formData.email);
       const response = await signupStepTwo(formData.email, password);
       console.log('Signup successful:', response.user);
-      onSignupSuccess(response.user);
+      setAuthenticatedUser(response.user);
+      setStep(3);
     } catch (err: any) {
       console.error('Signup error:', err);
       
@@ -127,6 +132,27 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
     setError('');
   };
 
+  const handleAvatarConfirm = async () => {
+    if (selectedAvatar && authenticatedUser) {
+      setLoading(true);
+      try {
+        await updateAvatar(selectedAvatar);
+        onSignupSuccess({ ...authenticatedUser, avatar: selectedAvatar });
+      } catch {
+        // Non-critical — proceed anyway
+        onSignupSuccess(authenticatedUser);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleAvatarSkip = () => {
+    if (authenticatedUser) {
+      onSignupSuccess(authenticatedUser);
+    }
+  };
+
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 relative"
@@ -143,7 +169,7 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
         {/* Header */}
         <div className="text-center mb-4">
           <h1 className="text-3xl font-extrabold text-content mb-1">Create Account</h1>
-          <p className="text-content-secondary text-sm">Step {step} of 2</p>
+          <p className="text-content-secondary text-sm">Step {step} of 3</p>
         </div>
 
         {/* Step Progress Line */}
@@ -155,11 +181,14 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
             <span className={`text-sm font-medium ${step >= 2 ? 'text-primary' : 'text-content-tertiary'}`}>
               Set Password
             </span>
+            <span className={`text-sm font-medium ${step >= 3 ? 'text-primary' : 'text-content-tertiary'}`}>
+              Choose Avatar
+            </span>
           </div>
           <div className="w-full bg-surface-tertiary rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: step === 1 ? '50%' : '100%' }}
+              style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
             />
           </div>
         </div>
@@ -171,7 +200,15 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
           </div>
         )}
 
-        {step === 1 ? (
+        {step === 3 ? (
+          <AvatarPicker
+            selectedAvatar={selectedAvatar}
+            onSelect={(id) => setSelectedAvatar(id)}
+            loading={loading}
+            onSkip={handleAvatarSkip}
+            onConfirm={handleAvatarConfirm}
+          />
+        ) : step === 1 ? (
           <form onSubmit={handleStepOneSubmit} className="space-y-4">
             <div className="relative">
               <UserIcon className="absolute left-3 top-3.5 text-content-tertiary w-5 h-5" />
@@ -313,14 +350,16 @@ const SignupFlow: React.FC<SignupFlowProps> = ({ onSignupSuccess, onNavigateToLo
         )}
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-border text-center">
-          <p className="text-content-secondary">
-            Already have an account?{' '}
-            <button onClick={onNavigateToLogin} className="text-primary font-bold hover:underline">
-              Login
-            </button>
-          </p>
-        </div>
+        {step !== 3 && (
+          <div className="mt-8 pt-6 border-t border-border text-center">
+            <p className="text-content-secondary">
+              Already have an account?{' '}
+              <button onClick={onNavigateToLogin} className="text-primary font-bold hover:underline">
+                Login
+              </button>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1014,6 +1014,9 @@ export interface User {
   subscriptionStart?: string;
   subscriptionEnd?: string;
 
+  // Avatar
+  avatar?: string;
+
   // Backend passthrough (optional)
   fullName?: string;
   creditsBalance?: number;
@@ -1063,7 +1066,7 @@ export interface UserDashboardData {
   creditHistory: CreditHistoryItem[];
   planDetails: {
     status: 'Active' | 'Cancelled';
-    invoiceHistory: { id: string; date: string; amount: string; status: string }[];
+    invoiceHistory: { id: string; date: string; amount: string; planType: string; status: string; startDate: string; endDate: string }[];
   };
 }
 
@@ -1133,6 +1136,13 @@ export interface AdminUserImage {
   section: string;
   category: string;
   createdAt: string;
+  promptData?: {
+    background?: string;
+    pose?: string;
+    expression?: string;
+    view?: string;
+    fullPrompt?: string;
+  };
 }
 
 export interface AdminUserImagesPagination {
@@ -1237,7 +1247,7 @@ export const PLAN_CONFIG = {
     credits: 75,
     monthlyPrice: 750,
     yearlyPrice: 7500,
-    allowedQualities: ['standard'] as const
+    allowedQualities: ['standard', 'high', 'ultra'] as const
   },
   Pro: {
     credits: 250,

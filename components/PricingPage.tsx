@@ -40,8 +40,8 @@ const PricingPage: React.FC<PricingPageProps> = ({ user, onPlanSelected, onBack 
             credits: 75,
             features: [
                 { name: 'Standard Quality (1K) - 3 credits', included: true },
-                { name: 'High Quality (2K) - 5 credits', included: false },
-                { name: 'Ultra Quality (4K) - 10 credits', included: false },
+                { name: 'High Quality (2K) - 5 credits', included: true },
+                { name: 'Ultra Quality (4K) - 10 credits', included: true },
                 { name: 'Max Images: 25/month (Standard)', included: true },
             ],
             idealFor: 'Casual users, new creators',
@@ -159,7 +159,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ user, onPlanSelected, onBack 
                                 <span className={`text-sm ${plan.name === 'Ultimate' ? 'text-content-disabled' : 'text-content-tertiary'}`}>/mo</span>
                             </div>
                             {billingCycle === 'yearly' && (
-                                <p className="text-xs text-content-secondary font-bold mt-1">Billed ₹{plan.yearlyPrice.toLocaleString()} annually</p>
+                                <p className={`text-xs font-bold mt-1 ${plan.name === 'Ultimate' ? 'text-content-disabled' : 'text-content-secondary'}`}>Billed ₹{plan.yearlyPrice.toLocaleString()} annually</p>
                             )}
                         </div>
 

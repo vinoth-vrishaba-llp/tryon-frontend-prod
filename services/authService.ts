@@ -170,6 +170,18 @@ export const restoreSession = (): AuthResponse | null => {
     return token && user ? { token, user } : null;
 };
 
+/**
+ * Update user avatar
+ */
+export const updateAvatar = async (avatarId: string): Promise<{ user: User }> => {
+    const response = await apiClient.put<{ user: User }>('/user/avatar', { avatar: avatarId });
+    const storedUser = getStoredUser();
+    if (storedUser) {
+        setStoredUser({ ...storedUser, avatar: avatarId });
+    }
+    return response;
+};
+
 // =============================================================================
 // ACCESS CONTROL
 // =============================================================================
@@ -214,14 +226,12 @@ export const canUseQuality = (
     quality: "standard" | "high" | "ultra"
 ): boolean => {
     if (!hasActivePaidPlan(user)) {
-        // Expired subscription with remaining credits: allow the quality tier of their last plan
+        // Expired subscription with remaining credits: allow all quality tiers
         if (hasRemainingCredits(user) && user?.planType !== "Free") {
-            if (user?.planType === "Basic") return quality === "standard";
             return true;
         }
         return false;
     }
-    if (user?.planType === "Basic") return quality === "standard";
     return true;
 };
 

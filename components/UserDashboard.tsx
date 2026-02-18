@@ -3,8 +3,12 @@ import { User, UserDashboardData, Report } from '../types';
 import { getUserDashboardData } from '../services/dashboardService';
 import { apiClient } from '../services/apiClient';
 import { encryptData } from '../services/encryption';
+import { updateAvatar } from '../services/authService';
+import { getAvatarById } from '../constants/avatars';
+import AvatarPicker from './AvatarPicker';
 import UserReportsList from './UserReportsList';
 import ReportDetails from './admin/ReportDetails';
+import { Pencil, X, Zap } from 'lucide-react';
 
 interface UserDashboardProps {
     user: User;
@@ -42,6 +46,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
     });
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
+
+    // Avatar state
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+    const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>(user.avatar);
+    const [avatarLoading, setAvatarLoading] = useState(false);
 
     // Sync profile form with user prop changes
     useEffect(() => {
@@ -132,6 +141,25 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
         }
     };
 
+    const handleAvatarSave = async () => {
+        if (selectedAvatar) {
+            setAvatarLoading(true);
+            try {
+                await updateAvatar(selectedAvatar);
+                if (onUserUpdate) {
+                    onUserUpdate({ ...user, avatar: selectedAvatar });
+                }
+                setShowAvatarPicker(false);
+            } catch {
+                // silently fail
+            } finally {
+                setAvatarLoading(false);
+            }
+        }
+    };
+
+    const avatarOption = getAvatarById(user.avatar);
+
     const handleReportSelect = (report: Report) => {
         setSelectedReport(report);
     };
@@ -207,11 +235,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                 </div>
                 <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border">
                     <p className="text-sm text-content-tertiary mb-1">Subscription Expiry</p>
-                    <p className="text-xl font-bold text-content">{user.subscriptionExpiry || 'N/A'}</p>
+                    <p className="text-xl font-bold text-content">{user.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}</p>
                 </div>
                 <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border">
                     <p className="text-sm text-content-tertiary mb-1">Remaining Credits</p>
-                    <p className="text-xl font-bold text-feedback-success">{user.tokenBalance} ⚡</p>
+                    <p className="text-xl font-bold text-feedback-success flex items-center gap-1">{user.tokenBalance} <Zap size={18} /></p>
                 </div>
             </div>
 
@@ -243,6 +271,68 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                         <p className="text-sm text-content-tertiary mt-1">Manage your account information</p>
                     </div>
                     <form onSubmit={handleProfileUpdate} className="p-6">
+                        {/* Avatar section */}
+                        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border">
+                            <div className="relative group">
+                                {avatarOption ? (
+                                    <img src={avatarOption.src} alt="Avatar" className="h-16 w-16 rounded-full object-cover" />
+                                ) : (
+                                    <div className="h-16 w-16 rounded-full bg-surface-tertiary flex items-center justify-center text-primary font-bold text-xl">
+                                        {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedAvatar(user.avatar);
+                                        setShowAvatarPicker(true);
+                                    }}
+                                    className="absolute -bottom-1 -right-1 p-1.5 bg-primary text-content-inverse rounded-full shadow-md hover:bg-secondary transition-colors"
+                                >
+                                    <Pencil size={12} />
+                                </button>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-content">{user.name || 'User'}</p>
+                                <p className="text-xs text-content-tertiary">{user.email}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedAvatar(user.avatar);
+                                        setShowAvatarPicker(true);
+                                    }}
+                                    className="text-xs text-primary font-medium mt-1 hover:underline"
+                                >
+                                    Change avatar
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Avatar picker modal */}
+                        {showAvatarPicker && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center">
+                                <div
+                                    className="absolute inset-0 bg-surface-inverse/50"
+                                    onClick={() => setShowAvatarPicker(false)}
+                                />
+                                <div className="relative bg-surface rounded-2xl shadow-2xl border border-border p-6 w-full max-w-sm mx-4 z-10">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAvatarPicker(false)}
+                                        className="absolute top-3 right-3 p-1 text-content-tertiary hover:text-content"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                    <AvatarPicker
+                                        selectedAvatar={selectedAvatar}
+                                        onSelect={(id) => setSelectedAvatar(id)}
+                                        loading={avatarLoading}
+                                        onConfirm={handleAvatarSave}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-xs font-bold text-content-tertiary uppercase mb-2">Full Name</label>
@@ -428,6 +518,60 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onBack, onNavigateT
                     </div>
                 </div>
             </div>
+
+            {/* Invoice History */}
+            {data.planDetails.invoiceHistory.length > 0 && (
+                <div className="mt-8 bg-surface rounded-2xl shadow-sm border border-border overflow-hidden">
+                    <div className="p-6 border-b border-border">
+                        <h3 className="text-lg font-bold text-content">Invoice History</h3>
+                        <p className="text-sm text-content-tertiary mt-1">Your subscription payment history</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-surface-secondary">
+                                    <th className="text-left text-xs font-bold text-content-tertiary uppercase px-6 py-3">Order ID</th>
+                                    <th className="text-left text-xs font-bold text-content-tertiary uppercase px-6 py-3">Date</th>
+                                    <th className="text-left text-xs font-bold text-content-tertiary uppercase px-6 py-3">Plan</th>
+                                    <th className="text-left text-xs font-bold text-content-tertiary uppercase px-6 py-3">Amount</th>
+                                    <th className="text-left text-xs font-bold text-content-tertiary uppercase px-6 py-3">Period</th>
+                                    <th className="text-left text-xs font-bold text-content-tertiary uppercase px-6 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {data.planDetails.invoiceHistory.map((invoice) => (
+                                    <tr key={invoice.id} className="hover:bg-surface-secondary/50 transition-colors">
+                                        <td className="px-6 py-4 text-sm text-content font-mono">{invoice.id}</td>
+                                        <td className="px-6 py-4 text-sm text-content">
+                                            {new Date(invoice.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                                                {invoice.planType}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-bold text-content">₹{Number(invoice.amount).toLocaleString('en-IN')}</td>
+                                        <td className="px-6 py-4 text-sm text-content-secondary">
+                                            {new Date(invoice.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            {' – '}
+                                            {new Date(invoice.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                                invoice.status === 'completed'
+                                                    ? 'bg-feedback-success/10 text-feedback-success'
+                                                    : 'bg-feedback-warning/10 text-feedback-warning'
+                                            }`}>
+                                                {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
                 </>
             )}
 

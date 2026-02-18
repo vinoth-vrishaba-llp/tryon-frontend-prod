@@ -535,6 +535,48 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ adminUser, userId, on
                             />
                         </div>
 
+                        {/* Prompt Details */}
+                        {selectedImage.promptData && (
+                            <div className="px-3 sm:px-4 py-3 border-t border-gray-100 bg-gray-50">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs mb-2">
+                                    {selectedImage.promptData.background && (
+                                        <div>
+                                            <span className="font-medium text-gray-500">Background:</span>{' '}
+                                            <span className="text-gray-800">{selectedImage.promptData.background}</span>
+                                        </div>
+                                    )}
+                                    {selectedImage.promptData.pose && (
+                                        <div>
+                                            <span className="font-medium text-gray-500">Pose:</span>{' '}
+                                            <span className="text-gray-800">{selectedImage.promptData.pose}</span>
+                                        </div>
+                                    )}
+                                    {selectedImage.promptData.expression && (
+                                        <div>
+                                            <span className="font-medium text-gray-500">Expression:</span>{' '}
+                                            <span className="text-gray-800">{selectedImage.promptData.expression}</span>
+                                        </div>
+                                    )}
+                                    {selectedImage.promptData.view && (
+                                        <div>
+                                            <span className="font-medium text-gray-500">View:</span>{' '}
+                                            <span className="text-gray-800">{selectedImage.promptData.view}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                {selectedImage.promptData.fullPrompt && (
+                                    <details className="mt-2">
+                                        <summary className="text-xs font-semibold text-gray-700 cursor-pointer hover:text-gray-900">
+                                            View Full Prompt
+                                        </summary>
+                                        <pre className="mt-2 p-3 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                                            {selectedImage.promptData.fullPrompt}
+                                        </pre>
+                                    </details>
+                                )}
+                            </div>
+                        )}
+
                         {/* Modal Footer - Read Only */}
                         <div className="p-3 sm:p-4 border-t border-gray-100">
                             <div className="flex flex-wrap items-center gap-3">
