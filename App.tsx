@@ -499,7 +499,7 @@ const App: React.FC = () => {
         }}
       />
       <main
-        className={`p-4 sm:p-6 lg:p-8 transition-opacity duration-300 ${
+        className={`transition-opacity duration-300 ${
           isPending ? "opacity-50" : "opacity-100"
         }`}
       >

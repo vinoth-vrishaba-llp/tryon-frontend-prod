@@ -1,26 +1,46 @@
-import React from 'react';
+import React from "react";
+
+import maintBg from "/image/tryon-maint-bg.webp";
+import maintRobot from "/image/maint-robot.webp";
 
 const MaintenancePage: React.FC = () => {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                <div className="mb-6 flex justify-center">
-                    <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">System Maintenance</h1>
-                <p className="text-gray-600 mb-8">
-                    We are currently performing scheduled maintenance to improve our services. We'll be back online shortly. Thank you for your patience!
-                </p>
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-sm font-medium">
-                    Estimated downtime: 30-60 minutes
-                </div>
-            </div>
+  return (
+    <div
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center"
+      style={{ backgroundImage: `url(${maintBg})` }}
+    >
+      <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-10 w-full max-w-7xl px-8">
+
+        {/* ── LEFT: Robot ── */}
+        {/* To increase robot size: change the w-[...] values below.
+            Current: sm=400px, md=480px, lg=580px
+            Larger:  sm=440px, md=520px, lg=640px  ← just bump each value */}
+        <div className="flex-shrink-0 w-[420px] sm:w-[520px] md:w-[620px] lg:w-[760px] md:-ml-16">
+          <img
+            src={maintRobot}
+            alt="Maintenance Robot"
+            className="w-full h-auto block "
+          />
         </div>
-    );
+
+        {/* ── RIGHT: Text ── */}
+        <div className="flex flex-col items-start text-left">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#191919] leading-none tracking-tight">
+            We’ll Be Back Shortly
+          </h1>
+          <div className="w-16 h-[4px] bg-[#7ed957] rounded-full mt-5 mb-6" />
+          <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold text-gray-900 leading-snug mb-5">
+            System maintenance in progress.
+          </h2>
+          <p className="text-base sm:text-lg lg:text-xl text-gray-500 leading-relaxed max-w-xl">
+            We are currently performing scheduled maintenance to improve our
+            services. We'll be back online shortly. Thank you for your patience!
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
 };
 
 export default MaintenancePage;
