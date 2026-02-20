@@ -131,6 +131,31 @@ export interface RecommendedPreset {
   display_order: number;
 }
 
+// Coupon types
+export type CouponType = 'flat' | 'percentage';
+export type CouponStatus = 'active' | 'inactive';
+
+export interface Coupon {
+    id: string;
+    code: string;
+    type: CouponType;
+    value: number;
+    status: CouponStatus;
+    createdAt: string;
+}
+
+export interface CouponApplyResult {
+    success: boolean;
+    coupon: {
+        code: string;
+        type: CouponType;
+        value: number;
+    };
+    originalAmount: number;
+    discountAmount: number;
+    discountedAmount: number;
+}
+
 export type BackgroundCategory = 'studio' | 'heritage' | 'urban' | 'nature' | 'traditional' | 'wedding' | 'kids';
 
 export interface BackgroundOption {

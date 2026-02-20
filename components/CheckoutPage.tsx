@@ -1,8 +1,9 @@
 // frontend/components/CheckoutPage.tsx
 import React, { useState } from 'react';
-import { User, Plan } from '../types';
+import { User, Plan, CouponApplyResult } from '../types';
 import { apiClient } from '../services/apiClient';
 import { encryptData } from '../services/encryption';
+import { applyCoupon } from '../services/couponService';
 
 interface CheckoutPageProps {
     user: User;
@@ -20,26 +21,57 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const amount =
+    // Coupon state
+    const [couponCode, setCouponCode] = useState('');
+    const [couponApplied, setCouponApplied] = useState<CouponApplyResult | null>(null);
+    const [couponError, setCouponError] = useState('');
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+    const baseAmount =
         plan.billingCycle === 'monthly'
             ? plan.monthlyPrice
             : plan.yearlyPrice;
+
+    const finalAmount = couponApplied ? couponApplied.discountedAmount : baseAmount;
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setIsApplyingCoupon(true);
+        setCouponError('');
+        setCouponApplied(null);
+        try {
+            const result = await applyCoupon(couponCode.trim(), plan.name, plan.billingCycle);
+            setCouponApplied(result);
+        } catch (err: any) {
+            setCouponError(err.message || 'Invalid coupon code');
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setCouponApplied(null);
+        setCouponCode('');
+        setCouponError('');
+    };
 
     const handlePayment = async () => {
         setIsLoading(true);
         setError('');
 
         try {
-            // 1️⃣ Create Razorpay Order
+            // 1️⃣ Create Razorpay Order (amount derived server-side)
             const order = await apiClient.post<{
                 id: string;
                 amount: number;
                 currency: string;
             }>('/payment/create-order', {
-                amount,
+                type: 'plan_upgrade',
+                planType: plan.name,
+                billingCycle: plan.billingCycle,
+                couponCode: couponApplied ? couponApplied.coupon.code : undefined,
                 currency: 'INR',
-                receipt: `receipt_${Date.now()}`,
-                type: 'plan_upgrade'
+                receipt: `receipt_${Date.now()}`
             });
 
             // 2️⃣ Razorpay Checkout
@@ -80,6 +112,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             type: 'plan_upgrade',
                             planType: encryptedPlanType,
                             billingCycle: encryptedBillingCycle,
+                            couponCode: couponApplied ? couponApplied.coupon.code : undefined,
                             encrypted: true
                         });
 
@@ -195,7 +228,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         </div>
                                         <div className="text-right">
                                             <p className="text-3xl font-black">
-                                                ₹{amount.toLocaleString()}
+                                                ₹{baseAmount.toLocaleString()}
                                             </p>
                                             <p className="text-xs font-bold uppercase tracking-wider opacity-70">
                                                 {plan.billingCycle === 'monthly'
@@ -249,15 +282,83 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     Order Summary
                                 </h2>
 
+                                {/* Coupon Code Input */}
+                                <div className="mb-6">
+                                    {!couponApplied ? (
+                                        <div>
+                                            <label className="block text-xs font-bold text-content-tertiary uppercase tracking-wider mb-2">
+                                                Coupon Code
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={couponCode}
+                                                    onChange={e => {
+                                                        setCouponCode(e.target.value.toUpperCase());
+                                                        setCouponError('');
+                                                    }}
+                                                    onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                                                    className="flex-1 px-3 py-2 bg-surface border border-border rounded-xl text-sm font-mono uppercase placeholder:normal-case placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    placeholder="Enter code"
+                                                    disabled={isApplyingCoupon}
+                                                    maxLength={50}
+                                                />
+                                                <button
+                                                    onClick={handleApplyCoupon}
+                                                    disabled={isApplyingCoupon || !couponCode.trim()}
+                                                    className="px-4 py-2 bg-surface border border-border rounded-xl text-sm font-bold hover:bg-surface-secondary transition-all disabled:opacity-50"
+                                                >
+                                                    {isApplyingCoupon ? '...' : 'Apply'}
+                                                </button>
+                                            </div>
+                                            {couponError && (
+                                                <p className="mt-1.5 text-xs text-red-500 font-medium">{couponError}</p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl">
+                                            <div>
+                                                <p className="text-xs font-bold text-green-700">
+                                                    Coupon applied:{' '}
+                                                    <span className="font-mono">{couponApplied.coupon.code}</span>
+                                                </p>
+                                                <p className="text-xs text-green-600 mt-0.5">
+                                                    {couponApplied.coupon.type === 'flat'
+                                                        ? `₹${couponApplied.discountAmount.toLocaleString()} off`
+                                                        : `${couponApplied.coupon.value}% off`}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={handleRemoveCoupon}
+                                                className="ml-2 text-green-600 hover:text-green-800 transition-colors"
+                                                title="Remove coupon"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="space-y-4 mb-8">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-content-tertiary">
                                             {plan.name} Plan ({plan.billingCycle})
                                         </span>
-                                        <span className="font-bold">
-                                            ₹{amount.toLocaleString()}
+                                        <span className={`font-bold ${couponApplied ? 'line-through text-content-disabled' : ''}`}>
+                                            ₹{baseAmount.toLocaleString()}
                                         </span>
                                     </div>
+
+                                    {couponApplied && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-green-600 font-medium">Discount</span>
+                                            <span className="font-bold text-green-600">
+                                                − ₹{couponApplied.discountAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-between text-sm">
                                         <span className="text-content-tertiary">Tax</span>
@@ -269,7 +370,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                             Total
                                         </span>
                                         <span className="text-2xl font-black text-primary">
-                                            ₹{amount.toLocaleString()}
+                                            ₹{finalAmount.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>
