@@ -20,37 +20,104 @@ interface AdminDashboardProps {
 const getInitials = (name: string) =>
     name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
 
-// ─── Inline SVG Line Chart ──────────────────────────────────────────────────
-const LineChart: React.FC<{ data: { label: string; value: number }[] }> = ({ data }) => {
-    if (!data.length) return <div className="h-40 bg-gray-50 rounded-lg" />;
-    const W = 800, H = 140;
-    const pad = { t: 10, r: 10, b: 28, l: 10 };
-    const cw = W - pad.l - pad.r;
-    const ch = H - pad.t - pad.b;
-    const max = Math.max(...data.map(d => d.value));
-    const min = Math.min(...data.map(d => d.value)) * 0.75;
-    const xp = (i: number) => pad.l + (i / (data.length - 1)) * cw;
-    const yp = (v: number) => pad.t + ch - ((v - min) / (max - min || 1)) * ch;
-    const mainPts = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xp(i)} ${yp(d.value)}`).join(' ');
-    const compPts = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xp(i)} ${yp(d.value * 0.72)}`).join(' ');
-    const area = `${mainPts} L ${xp(data.length - 1)} ${pad.t + ch} L ${pad.l} ${pad.t + ch} Z`;
+// ─── System Breakdown — donut pie charts ──────────────────────────────────────
+interface PieSegment { label: string; pct: number; color: string; }
+
+const DonutChart: React.FC<{ title: string; segments: PieSegment[] }> = ({ title, segments }) => {
+    const R = 34, CX = 50, CY = 50, SW = 13;
+    const circ = 2 * Math.PI * R;
+
+    // Negative dashoffset positions each segment right after the previous one.
+    // SVG spec allows negative stroke-dashoffset values.
+    // dashoffset = -cumLen means "skip cumLen units before drawing this segment".
+    let cumLen = 0;
+    const slices = segments.map((s: PieSegment) => {
+        const len = (s.pct / 100) * circ;
+        const dashOffset = -cumLen;
+        cumLen += len;
+        return { ...s, len, dashOffset };
+    });
+
     return (
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-40" preserveAspectRatio="none">
-            <defs>
-                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#191919" stopOpacity="0.10" />
-                    <stop offset="100%" stopColor="#191919" stopOpacity="0" />
-                </linearGradient>
-            </defs>
-            <path d={area} fill="url(#chartFill)" />
-            <path d={compPts} fill="none" stroke="#d1d5db" strokeWidth="2" strokeDasharray="6 4" />
-            <path d={mainPts} fill="none" stroke="#191919" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            {data.map((d, i) => (
-                <text key={i} x={xp(i)} y={H - 4} textAnchor="middle" fontSize="10" fill="#9ca3af" fontFamily="system-ui, sans-serif">
-                    {d.label}
-                </text>
-            ))}
-        </svg>
+        <div className="flex flex-col items-center gap-4">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center">{title}</p>
+            <div className="relative">
+                {/* rotate(-90deg) moves stroke start from 3-o'clock → 12-o'clock */}
+                <svg viewBox="0 0 100 100" className="w-32 h-32" style={{ transform: 'rotate(-90deg)' }}>
+                    {/* Background track */}
+                    <circle cx={CX} cy={CY} r={R} fill="none" stroke="#f0f0f0" strokeWidth={SW} />
+                    {slices.map((s: PieSegment & { len: number; dashOffset: number }, i: number) => (
+                        s.pct > 0 && (
+                            <circle
+                                key={i}
+                                cx={CX} cy={CY} r={R}
+                                fill="none"
+                                stroke={s.color}
+                                strokeWidth={SW}
+                                strokeDasharray={`${s.len} ${circ}`}
+                                strokeDashoffset={s.dashOffset}
+                                strokeLinecap="butt"
+                            />
+                        )
+                    ))}
+                </svg>
+                {/* Center text — counter-rotate to keep text upright */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-lg font-bold text-gray-900">{slices[0]?.pct}%</span>
+                    <span className="text-[10px] text-gray-400 font-medium">{slices[0]?.label}</span>
+                </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+                {segments.map((s: PieSegment, i: number) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                        <span className="text-[11px] text-gray-600">{s.label} <span className="text-gray-400 font-medium">{s.pct}%</span></span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const SystemBreakdown: React.FC<{ breakdown: AdminDashboardData['analytics']['breakdown'] }> = ({ breakdown }) => {
+    const qTotal = (breakdown.quality.pro || 0) + (breakdown.quality.standard || 0);
+    const qPro = qTotal > 0 ? Math.round((breakdown.quality.pro / qTotal) * 100) : 50;
+    const qStd = 100 - qPro;
+
+    const cTotal = (breakdown.category.women || 0) + (breakdown.category.men || 0) + (breakdown.category.kids || 0);
+    const cWomen = cTotal > 0 ? Math.round((breakdown.category.women / cTotal) * 100) : 34;
+    const cMen = cTotal > 0 ? Math.round((breakdown.category.men / cTotal) * 100) : 33;
+    const cKids = 100 - cWomen - cMen;
+
+    const mTotal = (breakdown.model.studio || 0) + (breakdown.model.custom || 0);
+    const mStudio = mTotal > 0 ? Math.round((breakdown.model.studio / mTotal) * 100) : 50;
+    const mCustom = 100 - mStudio;
+
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-8">System Breakdown</h3>
+            <div className="grid grid-cols-3 divide-x divide-gray-100">
+                <div className="pr-6">
+                    <DonutChart title="Quality Mode" segments={[
+                        { label: 'Pro', pct: qPro, color: '#b8d4e8' },
+                        { label: 'Standard', pct: qStd, color: '#e8d8f0' },
+                    ]} />
+                </div>
+                <div className="px-6">
+                    <DonutChart title="Category" segments={[
+                        { label: 'Women', pct: cWomen, color: '#ffc2d4' },
+                        { label: 'Men', pct: cMen, color: '#bde0fe' },
+                        { label: 'Kids', pct: cKids, color: '#ffd6a5' },
+                    ]} />
+                </div>
+                <div className="pl-6">
+                    <DonutChart title="Model Type" segments={[
+                        { label: 'Studio', pct: mStudio, color: '#c3f0ca' },
+                        { label: 'Custom', pct: mCustom, color: '#e8c9f8' },
+                    ]} />
+                </div>
+            </div>
+        </div>
     );
 };
 
@@ -280,7 +347,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
     const [reportsRefreshTrigger, setReportsRefreshTrigger] = useState(0);
 
     // UI state
-    const [timeRange, setTimeRange] = useState<'12m' | '30d' | '7d' | '24h'>('12m');
     const [tableSearch, setTableSearch] = useState('');
     const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -410,7 +476,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
     if (error) return <div className="p-8 text-red-600 text-sm">Error: {error}</div>;
     if (!data) return null;
 
-    const timeLabels = { '12m': '12 months', '30d': '30 days', '7d': '7 days', '24h': '24 hours' };
     const filteredUsers = getFilteredUsers(data.users);
     const recentUsers = getRecentUsers(data.users);
 
@@ -631,34 +696,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                                 />
                             </div>
 
-                            {/* Chart */}
-                            <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <button className="flex items-center gap-1.5 text-sm text-gray-600 font-medium mb-1 hover:text-gray-900">
-                                            Net revenue
-                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                        </button>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-3xl font-bold text-gray-900">{data.kpis.mrr}</p>
-                                            <span className="text-[11px] font-semibold text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5">↑ {data.kpis.growthRate}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        {(['12m', '30d', '7d', '24h'] as const).map(r => (
-                                            <button key={r} onClick={() => setTimeRange(r)}
-                                                className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${timeRange === r ? 'bg-[#191919] text-white' : 'text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
-                                                {timeLabels[r]}
-                                            </button>
-                                        ))}
-                                        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 ml-1">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" /></svg>
-                                            Filters
-                                        </button>
-                                    </div>
-                                </div>
-                                <LineChart data={data.analytics.usageByPeriod} />
-                            </div>
+                            {/* System Breakdown */}
+                            <SystemBreakdown breakdown={data.analytics.breakdown} />
 
                             {/* Recent Sign-ups — on dashboard */}
                             <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
