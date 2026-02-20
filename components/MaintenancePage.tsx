@@ -1,7 +1,7 @@
 import React from "react";
 
-import maintBg from "/image/tryon-maint-bg.webp";
-import maintRobot from "/image/maint-robot.webp";
+import maintBg from "../Image/tryon-maint-bg.webp";
+import maintRobot from "../Image/maint-robot.webp";
 
 const MaintenancePage: React.FC = () => {
   return (
