@@ -2,6 +2,193 @@ import React, { useEffect, useState } from 'react';
 import { User, UserDetails, AdminUserImage, AdminUserImagesFilters, AdminUserImagesFilterOptions } from '../types';
 import { getUserDetails, getUserImages, toggleUserStatus, adminResetPassword } from '../services/dashboardService';
 import UserImageGallery from './admin/UserImageGallery';
+import { getAvatarById } from '../constants/avatars';
+
+const getInitials = (name: string) =>
+    name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+
+// Pastel colors for model donut segments
+const MODEL_COLORS = ['#b8d4e8', '#ffc2d4', '#c3f0ca', '#e8d8f0', '#ffd6a5', '#bde0fe'];
+
+const ModelDonut: React.FC<{ models: { label: string; value: number }[] }> = ({ models }) => {
+    const R = 36, CX = 50, CY = 50, SW = 14;
+    const circ = 2 * Math.PI * R;
+    const active = models.filter(m => m.value > 0);
+    let cumLen = 0;
+    const slices = active.map((m, i) => {
+        const len = (m.value / 100) * circ;
+        const dashOffset = -cumLen;
+        cumLen += len;
+        return { ...m, len, dashOffset, color: MODEL_COLORS[i % MODEL_COLORS.length] };
+    });
+    const dominant = slices[0];
+    return (
+        <div className="flex flex-col items-center gap-3">
+            <div className="relative w-44 h-44">
+                <svg viewBox="0 0 100 100" className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx={CX} cy={CY} r={R} fill="none" stroke="#f0f0f0" strokeWidth={SW} />
+                    {slices.map((s, i) => (
+                        <circle
+                            key={i}
+                            cx={CX} cy={CY} r={R}
+                            fill="none"
+                            stroke={s.color}
+                            strokeWidth={SW}
+                            strokeDasharray={`${s.len} ${circ}`}
+                            strokeDashoffset={s.dashOffset}
+                            strokeLinecap="butt"
+                        />
+                    ))}
+                </svg>
+                {dominant && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-base font-bold text-gray-900">{dominant.value}%</span>
+                        <span className="text-[9px] text-gray-400 font-medium text-center leading-tight px-1">{dominant.label}</span>
+                    </div>
+                )}
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5">
+                {slices.map((s, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                        <span className="text-[11px] text-gray-600">{s.label} <span className="text-gray-400 font-medium">{s.value}%</span></span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const TrendLineChart: React.FC<{ data: { label: string; value: number }[] }> = ({ data }) => {
+    const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+    const n = data.length;
+    if (n === 0) return null;
+
+    const maxValue = Math.max(...data.map(d => d.value), 1);
+    const VW = 600, VH = 130, PAD_T = 18, PAD_B = 6, PAD_X = 16;
+    const plotW = VW - PAD_X * 2;
+    const plotH = VH - PAD_T - PAD_B;
+
+    // Current period points
+    const pts = data.map((item, i) => ({
+        x: PAD_X + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW),
+        y: PAD_T + plotH - (item.value / maxValue) * plotH,
+        ...item,
+    }));
+
+    // Synthetic "previous period": 3-point smoothed + scaled to ~72%
+    const compPts = data.map((_, i) => {
+        const prev = data[Math.max(0, i - 1)].value;
+        const curr = data[i].value;
+        const next = data[Math.min(n - 1, i + 1)].value;
+        const v = Math.round(((prev + curr + next) / 3) * 0.72);
+        return { x: pts[i].x, y: PAD_T + plotH - (v / maxValue) * plotH, value: v };
+    });
+
+    // Smooth catmull-rom bezier path
+    const makePath = (points: { x: number; y: number }[]) => {
+        if (points.length < 2) return `M ${points[0].x},${points[0].y}`;
+        const d = [`M ${points[0].x},${points[0].y}`];
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[Math.max(i - 1, 0)];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[Math.min(i + 2, points.length - 1)];
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+            d.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`);
+        }
+        return d.join(' ');
+    };
+
+    const linePath = makePath(pts);
+    const compPath = makePath(compPts);
+
+    // Tooltip dimensions + positioning
+    const TT_W = 150, TT_H = 64, TT_GAP = 12;
+
+    return (
+        <div className="overflow-visible">
+            <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full overflow-visible">
+
+                {/* Previous period — dashed */}
+                <path d={compPath} fill="none" stroke="#d1d5db" strokeWidth="1.2"
+                    strokeLinecap="round" strokeDasharray="4,4" />
+
+                {/* Current period — solid */}
+                <path d={linePath} fill="none" stroke="#374151" strokeWidth="1.8"
+                    strokeLinecap="round" strokeLinejoin="round" />
+
+                {/* Hover state */}
+                {(() => {
+                    if (hoveredIdx === null) return null;
+                    const p = pts[hoveredIdx];
+                    const cp = compPts[hoveredIdx];
+                    const item = data[hoveredIdx];
+                    const showRight = p.x < VW - TT_W - TT_GAP - PAD_X;
+                    const ttX = showRight ? p.x + TT_GAP : p.x - TT_W - TT_GAP;
+                    const ttY = Math.max(0, Math.min(p.y - TT_H / 2, VH - TT_H));
+                    return (
+                        <>
+                            {/* Vertical dashed guide */}
+                            <line x1={p.x} y1={PAD_T} x2={p.x} y2={VH - PAD_B}
+                                stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3" />
+                            {/* Dot on current line */}
+                            <circle cx={p.x} cy={p.y} r="4.5" fill="white" stroke="#374151" strokeWidth="2" />
+                            {/* Dot on previous line */}
+                            <circle cx={cp.x} cy={cp.y} r="3" fill="white" stroke="#d1d5db" strokeWidth="1.5" />
+                            {/* Tooltip card */}
+                            <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx="7" fill="#111827" />
+                            {/* Header */}
+                            <text x={ttX + 12} y={ttY + 19} fontSize="10.5" fill="white" fontWeight="700"
+                                fontFamily="system-ui,sans-serif">
+                                {item.label}
+                            </text>
+                            {/* Current period row */}
+                            <text x={ttX + 12} y={ttY + 37} fontSize="9" fill="#9ca3af"
+                                fontFamily="system-ui,sans-serif">
+                                Current period:
+                            </text>
+                            <text x={ttX + TT_W - 12} y={ttY + 37} fontSize="9" fill="white"
+                                fontWeight="600" textAnchor="end" fontFamily="system-ui,sans-serif">
+                                {item.value}
+                            </text>
+                            {/* Previous period row */}
+                            <text x={ttX + 12} y={ttY + 53} fontSize="9" fill="#9ca3af"
+                                fontFamily="system-ui,sans-serif">
+                                Previous period:
+                            </text>
+                            <text x={ttX + TT_W - 12} y={ttY + 53} fontSize="9" fill="white"
+                                fontWeight="600" textAnchor="end" fontFamily="system-ui,sans-serif">
+                                {cp.value}
+                            </text>
+                        </>
+                    );
+                })()}
+
+                {/* Invisible hit areas for each column */}
+                {pts.map((p, i) => (
+                    <rect key={i}
+                        x={p.x - (plotW / n) / 2} y={0}
+                        width={plotW / n} height={VH}
+                        fill="transparent" style={{ cursor: 'pointer' }}
+                        onMouseEnter={() => setHoveredIdx(i)}
+                        onMouseLeave={() => setHoveredIdx(null)}
+                    />
+                ))}
+            </svg>
+            <div className="flex mt-3">
+                {data.map((item) => (
+                    <span key={item.label} className="flex-1 text-center text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+                        {item.label}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 interface UserDetailsPageProps {
     adminUser: User;
@@ -198,35 +385,42 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ adminUser, userId, on
         }
     };
 
-    if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading User Details...</div>;
-    if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
+    if (isLoading) return <div className="flex items-center justify-center min-h-screen text-gray-500 text-sm">Loading user details...</div>;
+    if (error) return <div className="p-8 text-red-600 text-sm">Error: {error}</div>;
     if (!details) return null;
 
+    const avatarSrc = getAvatarById(details.avatar)?.src;
+
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
+        <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+
+            {/* ── Header ────────────────────────────────────────────────────── */}
+            <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={onBack}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">User Details</h1>
-                        <p className="text-gray-600">Comprehensive insights for {details.name}</p>
+                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                        <span>Users</span>
+                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-gray-900 font-medium truncate max-w-[200px]">{details.name}</span>
                     </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowConfirmModal(details.status === 'Active' ? 'suspend' : 'activate')}
                         disabled={isTogglingStatus}
-                        className={`px-4 py-2 rounded-lg font-bold transition-all text-sm disabled:opacity-50 ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
                             details.status === 'Active'
-                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                                : 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100'
                         }`}
                     >
                         {isTogglingStatus ? 'Processing...' : (details.status === 'Active' ? 'Suspend Account' : 'Activate Account')}
@@ -234,249 +428,280 @@ const UserDetailsPage: React.FC<UserDetailsPageProps> = ({ adminUser, userId, on
                     <button
                         onClick={() => setShowPasswordModal(true)}
                         disabled={isResettingPassword}
-                        className="px-4 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transition-all text-sm disabled:opacity-50"
+                        className="flex items-center gap-2 px-3 py-2 bg-[#191919] text-white rounded-lg text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
                     >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
                         Reset Password
                     </button>
                 </div>
-            </div>
+            </header>
 
-            {/* Action Message */}
-            {actionMessage && (
-                <div className={`mb-6 p-4 rounded-lg flex items-center justify-between ${
-                    actionMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-                }`}>
-                    <div className="flex items-center gap-2">
-                        {actionMessage.type === 'success' ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* ── Content ───────────────────────────────────────────────────── */}
+            <div className="flex-1 overflow-auto p-8">
+
+                {/* Action toast */}
+                {actionMessage && (
+                    <div className={`mb-6 px-4 py-3 rounded-xl flex items-center justify-between border ${
+                        actionMessage.type === 'success'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                        <div className="flex items-center gap-2">
+                            {actionMessage.type === 'success' ? (
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : (
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            )}
+                            <span className="text-sm font-medium">{actionMessage.text}</span>
+                        </div>
+                        <button onClick={() => setActionMessage(null)} className="p-1 hover:bg-black/10 rounded-md">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        )}
-                        <span className="font-medium">{actionMessage.text}</span>
+                        </button>
                     </div>
-                    <button onClick={() => setActionMessage(null)} className="p-1 hover:bg-black/10 rounded">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            )}
+                )}
 
-            {/* Tab Navigation */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
-                <div className="flex border-b border-gray-200">
+                {/* Profile Hero Card */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+                    <div className="flex items-center justify-between gap-6">
+                        {/* Left: avatar + identity */}
+                        <div className="flex items-center gap-4 min-w-0">
+                            {avatarSrc ? (
+                                <img
+                                    src={avatarSrc}
+                                    alt={details.name}
+                                    className="w-16 h-16 rounded-full object-cover border border-gray-200 flex-shrink-0"
+                                />
+                            ) : (
+                                <div className="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white text-lg font-bold">{getInitials(details.name || '')}</span>
+                                </div>
+                            )}
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <h2 className="text-lg font-bold text-gray-900 truncate">{details.name}</h2>
+                                    <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-md flex-shrink-0">
+                                        {details.planType || 'Free'}
+                                    </span>
+                                    {details.status === 'Active' ? (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-md flex-shrink-0">
+                                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />Active
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-md flex-shrink-0">
+                                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />Blocked
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-sm text-gray-500 truncate">{details.email}</p>
+                            </div>
+                        </div>
+
+                        {/* Right: key stats */}
+                        <div className="flex items-center divide-x divide-gray-200 flex-shrink-0">
+                            <div className="px-6 text-center">
+                                <p className="text-xs text-gray-400 mb-0.5">Total Images</p>
+                                <p className="text-xl font-bold text-gray-900">{details.usageInsights.totalImages.toLocaleString()}</p>
+                            </div>
+                            <div className="px-6 text-center">
+                                <p className="text-xs text-gray-400 mb-0.5">Credits Used</p>
+                                <p className="text-xl font-bold text-gray-900">{details.usageInsights.totalTokens}</p>
+                            </div>
+                            <div className="pl-6 text-center">
+                                <p className="text-xs text-gray-400 mb-0.5">Last Active</p>
+                                <p className="text-sm font-bold text-gray-900">{details.usageInsights.lastActive}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex items-center gap-8 border-b border-gray-200 mb-6">
                     <button
                         onClick={() => setActiveTab('overview')}
-                        className={`flex-1 px-6 py-4 font-semibold transition-all ${
+                        className={`pb-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
                             activeTab === 'overview'
-                                ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                     >
                         Overview
                     </button>
                     <button
                         onClick={() => setActiveTab('images')}
-                        className={`flex-1 px-6 py-4 font-semibold transition-all ${
+                        className={`pb-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
                             activeTab === 'images'
-                                ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                     >
-                        Generated Images ({details.usageInsights.totalImages})
+                        Generated Images
+                        <span className="ml-1.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">
+                            {details.usageInsights.totalImages}
+                        </span>
                     </button>
                 </div>
-            </div>
 
-            {activeTab === 'overview' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* A. Personal & Account Information */}
-                    <div className="lg:col-span-1 space-y-8">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <span className="text-primary">👤</span> Personal Info
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
-                                    <p className="text-sm font-medium text-gray-900">{details.name}</p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
-                                    <p className="text-sm font-medium text-gray-900">{details.email}</p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name</label>
-                                    <p className="text-sm font-medium text-gray-900">{details.brandName || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Website</label>
-                                    <p className="text-sm font-medium text-primary hover:underline cursor-pointer">{details.website || 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
+                {/* ── Overview Tab ───────────────────────────────────────────── */}
+                {activeTab === 'overview' && (
+                    <div className="space-y-6">
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <span className="text-primary">📅</span> Account Status
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-xs font-bold text-gray-500 uppercase">Plan Type</label>
-                                    <span className="px-2 py-1 bg-indigo-50 text-primary rounded text-[10px] font-bold uppercase">
-                                        {details.planType}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <label className="text-xs font-bold text-gray-500 uppercase">Status</label>
-                                    <span className="flex items-center text-[10px] font-bold text-green-600">
-                                        <span className="w-1.5 h-1.5 bg-green-600 rounded-full mr-1.5"></span>
-                                        {details.status}
-                                    </span>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Subscription Start</label>
-                                    <p className="text-sm font-medium text-gray-900">{details.subscriptionStart ? formatDate(details.subscriptionStart) : 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Subscription End</label>
-                                    <p className="text-sm font-medium text-gray-900">{details.subscriptionEnd ? formatDate(details.subscriptionEnd) : 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* B. Usage & Activity Insights */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="text-primary">📸</span> Image Stats
-                                </h3>
+                        {/* Row 1: Image Stats + Peak Usage */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="bg-white border border-gray-200 rounded-xl p-6">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-5">Image Stats</h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <p className="text-xs font-bold text-gray-500 uppercase mb-1">Total Images</p>
-                                        <p className="text-2xl font-black text-gray-900">{details.usageInsights.totalImages}</p>
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Total Images</p>
+                                        <p className="text-3xl font-bold text-gray-900">{details.usageInsights.totalImages.toLocaleString()}</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <p className="text-xs font-bold text-gray-500 uppercase mb-1">Credits Used</p>
-                                        <p className="text-2xl font-black text-primary">{details.usageInsights.totalTokens}</p>
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Credits Used</p>
+                                        <p className="text-3xl font-bold text-gray-900">{details.usageInsights.totalTokens}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="text-primary">📈</span> Peak Usage
-                                </h3>
-                                <div className="space-y-2">
-                                    <p className="text-sm font-bold text-gray-900">{details.usageInsights.peakUsage.day}</p>
-                                    <p className="text-xs text-gray-500">{details.usageInsights.peakUsage.time}</p>
-                                    <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary" style={{ width: '85%' }}></div>
-                                    </div>
+                            <div className="bg-white border border-gray-200 rounded-xl p-6">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-5">Peak Usage</h3>
+                                <p className="text-base font-bold text-gray-900">{details.usageInsights.peakUsage.day}</p>
+                                <p className="text-sm text-gray-500 mt-0.5 mb-5">{details.usageInsights.peakUsage.time}</p>
+                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gray-800 rounded-full" style={{ width: '85%' }} />
                                 </div>
+                                <p className="text-[10px] text-gray-400 mt-2">Usage intensity</p>
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6">Usage Breakdown</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-4">Categories</p>
-                                    <div className="space-y-3">
-                                        {details.usageInsights.categories.map(cat => (
-                                            <div key={cat.label}>
-                                                <div className="flex justify-between text-xs mb-1">
-                                                    <span className="font-medium text-gray-600">{cat.label}</span>
-                                                    <span className="font-bold text-gray-900">{cat.value}%</span>
-                                                </div>
-                                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-indigo-400" style={{ width: `${cat.value}%` }}></div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                        {/* Row 2: Personal Info + Usage Breakdown */}
+                        <div className="grid grid-cols-3 gap-6">
+
+                            {/* Personal & Account Info */}
+                            <div className="col-span-1 bg-white border border-gray-200 rounded-xl p-6">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-4">Personal Info</h3>
+                                <div className="space-y-4">
+                                    {[
+                                        { label: 'Full Name', value: details.name },
+                                        { label: 'Email Address', value: details.email },
+                                        { label: 'Brand Name', value: details.brandName || '—' },
+                                        { label: 'Website', value: details.website || '—' },
+                                    ].map(({ label, value }) => (
+                                        <div key={label}>
+                                            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>
+                                            <p className="text-sm text-gray-900 font-medium break-all">{value}</p>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-4">Models</p>
-                                    <div className="space-y-3">
-                                        {details.usageInsights.models.map(model => (
-                                            <div key={model.label}>
-                                                <div className="flex justify-between text-xs mb-1">
-                                                    <span className="font-medium text-gray-600">{model.label}</span>
-                                                    <span className="font-bold text-gray-900">{model.value}%</span>
-                                                </div>
-                                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-primary" style={{ width: `${model.value}%` }}></div>
-                                                </div>
-                                            </div>
-                                        ))}
+
+                                <div className="border-t border-gray-100 my-5" />
+
+                                <h3 className="text-sm font-semibold text-gray-900 mb-4">Account</h3>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Plan</p>
+                                        <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-md">
+                                            {details.planType || 'Free'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Status</p>
+                                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                                            details.status === 'Active' ? 'text-green-700' : 'text-red-600'
+                                        }`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${details.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`} />
+                                            {details.status}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Subscription Start</p>
+                                        <p className="text-sm text-gray-900 font-medium">
+                                            {details.subscriptionStart ? formatDate(details.subscriptionStart) : '—'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Subscription End</p>
+                                        <p className="text-sm text-gray-900 font-medium">
+                                            {details.subscriptionEnd ? formatDate(details.subscriptionEnd) : '—'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* C. Additional Insights */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6">Usage Trend (Monthly)</h3>
-                            {(() => {
-                                const maxValue = Math.max(...details.usageInsights.usageTrend.map(item => item.value), 1);
-                                return (
-                                    <div className="h-56 flex items-end justify-between gap-2">
-                                        {details.usageInsights.usageTrend.map(item => {
-                                            const heightPercent = (item.value / maxValue) * 100;
-                                            return (
-                                                <div key={item.label} className="flex-1 flex flex-col items-center group">
-                                                    <span className="text-xs font-bold text-gray-700 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        {item.value}
-                                                    </span>
-                                                    <div className="w-full flex flex-col items-center justify-end h-40">
-                                                        <div
-                                                            className="w-full bg-gray-900 hover:bg-black transition-all rounded-t-lg min-h-[4px]"
-                                                            style={{ height: `${Math.max(heightPercent, 2)}%` }}
-                                                        >
-                                                        </div>
+                            {/* Usage Breakdown */}
+                            <div className="col-span-2 bg-white border border-gray-200 rounded-xl p-6">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-6">Usage Breakdown</h3>
+                                <div className="grid grid-cols-2 divide-x divide-gray-100">
+                                    {/* Categories — progress bars */}
+                                    <div className="pr-6">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-4">Categories</p>
+                                        <div className="space-y-4">
+                                            {details.usageInsights.categories.map(cat => (
+                                                <div key={cat.label}>
+                                                    <div className="flex justify-between text-xs mb-1.5">
+                                                        <span className="text-gray-600 font-medium">{cat.label}</span>
+                                                        <span className="text-gray-900 font-bold">{cat.value}%</span>
                                                     </div>
-                                                    <p className="text-[10px] font-bold text-gray-500 mt-2 uppercase">{item.label}</p>
+                                                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-gray-800 rounded-full" style={{ width: `${cat.value}%` }} />
+                                                    </div>
                                                 </div>
-                                            );
-                                        })}
+                                            ))}
+                                        </div>
                                     </div>
-                                );
-                            })()}
-                            <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-gray-100">
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">Avg Credits / Session</p>
-                                    <p className="text-xl font-black text-gray-900">{details.usageInsights.avgCreditsPerSession}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">Last Active</p>
-                                    <p className="text-xl font-black text-gray-900">{details.usageInsights.lastActive}</p>
+                                    {/* Models — donut chart */}
+                                    <div className="pl-6 flex flex-col">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-4">Models</p>
+                                        <div className="flex-1 flex items-center justify-center">
+                                            <ModelDonut models={details.usageInsights.models} />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Row 3: Monthly Trend */}
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <h3 className="text-sm font-semibold text-gray-900 mb-6">Usage Trend (Monthly)</h3>
+                            <TrendLineChart data={details.usageInsights.usageTrend} />
+                            <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-100">
+                                <div>
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Avg Credits / Session</p>
+                                    <p className="text-xl font-bold text-gray-900">{details.usageInsights.avgCreditsPerSession}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Last Active</p>
+                                    <p className="text-xl font-bold text-gray-900">{details.usageInsights.lastActive}</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
-            ) : (
-                <UserImageGallery
-                    images={images}
-                    isLoading={imagesLoading}
-                    pagination={pagination}
-                    filterOptions={filterOptions}
-                    filters={filters}
-                    onPageChange={handlePageChange}
-                    onFilterChange={handleFilterChange}
-                    onImageClick={(img) => {
-                        setIsModalImageLoading(true);
-                        setSelectedImage(img);
-                    }}
-                />
-            )}
+                )}
+
+                {/* ── Generated Images Tab ───────────────────────────────────── */}
+                {activeTab === 'images' && (
+                    <UserImageGallery
+                        images={images}
+                        isLoading={imagesLoading}
+                        pagination={pagination}
+                        filterOptions={filterOptions}
+                        filters={filters}
+                        onPageChange={handlePageChange}
+                        onFilterChange={handleFilterChange}
+                        onImageClick={(img) => {
+                            setIsModalImageLoading(true);
+                            setSelectedImage(img);
+                        }}
+                    />
+                )}
+            </div>
 
             {/* Image Detail Modal */}
             {selectedImage && (

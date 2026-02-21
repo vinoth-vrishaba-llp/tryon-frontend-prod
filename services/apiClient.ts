@@ -181,7 +181,10 @@ const handleResponse = async (response: Response) => {
         
         // If there are validation details, include them
         if (errorData.details && Array.isArray(errorData.details)) {
-            errorMessage += ': ' + errorData.details.join(', ');
+            const detailMessages = errorData.details.map((d: any) =>
+                typeof d === 'string' ? d : (d.message || JSON.stringify(d))
+            );
+            errorMessage += ': ' + detailMessages.join(', ');
         }
         
         // Log detailed error info for debugging

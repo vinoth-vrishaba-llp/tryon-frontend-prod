@@ -15,6 +15,12 @@ interface ImageUploadCardProps {
 
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 const ImageUploadCard: React.FC<ImageUploadCardProps> = ({ 
   title, 
   isOptional, 
@@ -219,103 +225,137 @@ const ImageUploadCard: React.FC<ImageUploadCardProps> = ({
 
   return (
     <>
-        <div 
-          className={`bg-white rounded-lg shadow-md p-4 flex flex-col items-center justify-center transition-all ${className || 'h-full'}`}
-        >
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              {title} {!isOptional && <span className="text-red-500">*</span>}
+      <div className={`bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3 transition-all ${className || 'h-full'}`}>
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between flex-shrink-0">
+          <h3 className="text-sm font-semibold text-gray-800">
+            {title}
+            {!isOptional && <span className="text-red-400 ml-0.5">*</span>}
           </h3>
-          <p className="text-xs text-gray-500 mb-3">{isOptional ? 'Optional' : 'Required'}</p>
-          
-          <div 
-            ref={dropzoneRef}
-            onClick={handleCardClick}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            className={`w-full ${dropzoneClassName || 'h-48'} border-2 border-dashed rounded-lg flex items-center justify-center relative transition-all duration-200 group overflow-hidden ${
-              isDragging ? 'border-primary scale-105 bg-indigo-50 shadow-lg' : 'border-gray-300'
-            } ${error ? 'border-red-300 bg-red-50' : ''} ${!imageFile && !isProcessing ? 'cursor-pointer hover:border-primary hover:bg-gray-50' : 'cursor-default'}`}
-            style={{
-              transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <input
-              type="file"
-              ref={inputRef}
-              onChange={handleFileChange}
-              accept={ALLOWED_MIME_TYPES.join(', ')}
-              className="hidden"
-              disabled={isProcessing}
-            />
-            
-            {isProcessing ? (
-              <div className="w-full px-6 flex flex-col items-center">
-                  <p className="text-sm font-semibold text-primary mb-2">Processing...</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                      className="bg-primary h-2.5 rounded-full transition-all duration-100 ease-out" 
-                      style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">{uploadProgress}%</p>
-              </div>
-            ) : imageFile ? (
-              <>
-                  <img src={imageFile.previewUrl} alt="Preview" className="w-full h-full object-contain rounded-lg p-1" />
-                  <button
-                  onClick={handleRemove}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                  aria-label="Remove image"
-                  type="button"
-                  >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  </button>
-              </>
-            ) : (
-              <div className="text-center text-gray-500 pointer-events-none px-2">
-                  {error ? (
-                      <div className="flex flex-col items-center text-red-500">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-xs font-medium">{error}</p>
-                          <p className="text-xs mt-2 text-gray-400">Click to try again</p>
-                      </div>
-                  ) : (
-                      <>
-                          <div className={`transition-transform duration-200 ${isDragging ? 'scale-110' : ''}`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <p className="mt-1 text-sm font-medium">
-                            {isDragging ? 'Drop image here' : 'Click or drag to upload'}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP</p>
-                          {isDragging && (
-                            <div className="mt-2 text-xs text-primary font-medium animate-pulse">
-                              Release to upload
-                            </div>
-                          )}
-                      </>
-                  )}
-              </div>
-            )}
-          </div>
+          {isOptional && (
+            <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
+              Optional
+            </span>
+          )}
         </div>
 
-        {showCropper && tempFile && (
-            <ImageCropper 
-                imageFile={tempFile} 
-                onConfirm={handleCropConfirm} 
-                onCancel={handleCropCancel} 
-            />
-        )}
+        {/* ── Body ── */}
+        <div className="flex-1 flex flex-col justify-center">
+
+          {isProcessing ? (
+            /* Processing — file row with animated progress bar */
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="w-10 h-10 rounded-lg bg-gray-200 animate-pulse flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-sm font-medium text-gray-700 truncate">Processing…</p>
+                  <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{uploadProgress}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#191919] rounded-full transition-all duration-100 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+          ) : imageFile ? (
+            /* Uploaded — file row with thumbnail + complete progress */
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 group">
+              <img
+                src={imageFile.previewUrl}
+                alt={imageFile.file.name}
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{imageFile.file.name}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{formatFileSize(imageFile.file.size)}</p>
+                <div className="mt-1.5 h-1 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 rounded-full w-full" />
+                </div>
+              </div>
+              <button
+                onClick={handleRemove}
+                type="button"
+                aria-label="Remove image"
+                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+          ) : (
+            /* Empty / Error — dropzone */
+            <div
+              ref={dropzoneRef}
+              onClick={handleCardClick}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              className={`w-full flex-1 min-h-[108px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 px-4 py-6 cursor-pointer transition-all duration-200 ${
+                error
+                  ? 'border-red-200 bg-red-50 hover:border-red-300'
+                  : isDragging
+                    ? 'border-gray-800 bg-gray-100'
+                    : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
+              } ${dropzoneClassName || ''}`}
+            >
+              <input
+                type="file"
+                ref={inputRef}
+                onChange={handleFileChange}
+                accept={ALLOWED_MIME_TYPES.join(', ')}
+                className="hidden"
+                disabled={isProcessing}
+              />
+
+              {error ? (
+                <>
+                  <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="text-center pointer-events-none">
+                    <p className="text-xs font-medium text-red-600">{error}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Click to try again</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                  </div>
+                  <div className="text-center pointer-events-none">
+                    <p className="text-xs font-medium text-gray-700">
+                      {isDragging ? 'Drop to upload' : (
+                        <>Drag & drop or <span className="underline text-gray-900">browse</span></>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, WEBP</p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {showCropper && tempFile && (
+        <ImageCropper
+          imageFile={tempFile}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </>
   );
 };

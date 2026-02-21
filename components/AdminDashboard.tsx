@@ -179,6 +179,7 @@ interface UsersTableProps {
     onTableSearchChange: (v: string) => void;
     onViewUser: (id: string) => void;
     onSuspend: (u: AdminUser) => void;
+    onBulkSuspend: (ids: string[]) => Promise<void>;
 }
 
 const UsersTable: React.FC<UsersTableProps> = ({
@@ -189,118 +190,247 @@ const UsersTable: React.FC<UsersTableProps> = ({
     onTableSearchChange,
     onViewUser,
     onSuspend,
-}) => (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-            {showSearch && (
-                <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg w-64">
-                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                        type="text"
-                        placeholder="Search by name, email or plan…"
-                        value={tableSearch}
-                        onChange={e => onTableSearchChange(e.target.value)}
-                        className="text-sm text-gray-700 flex-1 outline-none bg-transparent placeholder-gray-400"
-                    />
-                    {tableSearch && (
-                        <button onClick={() => onTableSearchChange('')} className="text-gray-400 hover:text-gray-600">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    onBulkSuspend,
+}) => {
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+    const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+    const headerCheckRef = useRef<HTMLInputElement>(null);
+
+    const allVisibleSelected = users.length > 0 && users.every(u => selectedIds.has(u.id));
+    const someVisibleSelected = users.some(u => selectedIds.has(u.id));
+
+    useEffect(() => {
+        if (headerCheckRef.current) {
+            headerCheckRef.current.indeterminate = someVisibleSelected && !allVisibleSelected;
+        }
+    }, [someVisibleSelected, allVisibleSelected]);
+
+    const toggleAll = () => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (allVisibleSelected) {
+                users.forEach(u => next.delete(u.id));
+            } else {
+                users.forEach(u => next.add(u.id));
+            }
+            return next;
+        });
+    };
+
+    const toggleRow = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
+    const handleBulkConfirm = async () => {
+        setIsBulkProcessing(true);
+        try {
+            await onBulkSuspend(Array.from(selectedIds));
+            setSelectedIds(new Set());
+            setBulkConfirmOpen(false);
+        } finally {
+            setIsBulkProcessing(false);
+        }
+    };
+
+    return (
+        <>
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+                    {showSearch && (
+                        <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg w-64">
+                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                        </button>
+                            <input
+                                type="text"
+                                placeholder="Search by name, email or plan…"
+                                value={tableSearch}
+                                onChange={e => onTableSearchChange(e.target.value)}
+                                className="text-sm text-gray-700 flex-1 outline-none bg-transparent placeholder-gray-400"
+                            />
+                            {tableSearch && (
+                                <button onClick={() => onTableSearchChange('')} className="text-gray-400 hover:text-gray-600">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
+
+                {/* Bulk action bar */}
+                {selectedIds.size > 0 && (
+                    <div className="flex items-center justify-between px-6 py-2.5 bg-amber-50 border-b border-amber-100">
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-amber-900">
+                                {selectedIds.size} user{selectedIds.size !== 1 ? 's' : ''} selected
+                            </span>
+                            <button
+                                onClick={() => setSelectedIds(new Set())}
+                                className="text-xs text-amber-600 hover:text-amber-800 underline underline-offset-2"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => setBulkConfirmOpen(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                            Suspend Selected
+                        </button>
+                    </div>
+                )}
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-gray-200 bg-white">
+                                <th className="px-6 py-3 w-10">
+                                    <input
+                                        ref={headerCheckRef}
+                                        type="checkbox"
+                                        checked={allVisibleSelected}
+                                        onChange={toggleAll}
+                                        className="rounded border-gray-300 cursor-pointer"
+                                    />
+                                </th>
+                                {(['User', 'Email', 'Date', 'Status', 'Plan'] as const).map(col => (
+                                    <th key={col} className="px-4 py-3 text-xs font-medium text-gray-500">
+                                        <span className="flex items-center gap-1">{col}</span>
+                                    </th>
+                                ))}
+                                <th className="px-4 py-3 w-20" />
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-400">
+                                        No users match your search.
+                                    </td>
+                                </tr>
+                            ) : users.map(u => (
+                                <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${selectedIds.has(u.id) ? 'bg-amber-50/50' : ''}`}>
+                                    <td className="px-6 py-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(u.id)}
+                                            onChange={() => toggleRow(u.id)}
+                                            className="rounded border-gray-300 cursor-pointer"
+                                        />
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                                <span className="text-[#191919] text-xs font-bold">{getInitials(u.name || '')}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">{u.name}</p>
+                                                <p className="text-xs text-gray-500">@{u.email.split('@')[0]}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4 text-sm text-gray-600">{u.email}</td>
+                                    <td className="px-4 py-4 text-sm text-gray-600">{u.signupDate}</td>
+                                    <td className="px-4 py-4">
+                                        {u.status === 'Active' ? (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 border border-green-200 text-green-700 text-xs font-medium rounded-md">
+                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />Active
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-md">
+                                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />Blocked
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                                            {u.planType || 'Free'}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <div className="flex items-center gap-2 justify-end">
+                                            <button
+                                                onClick={() => onViewUser(u.id)}
+                                                title="View user"
+                                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => onSuspend(u)}
+                                                title={u.status === 'Active' ? 'Suspend user' : 'Activate user'}
+                                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Bulk suspend confirm dialog */}
+            {bulkConfirmOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !isBulkProcessing && setBulkConfirmOpen(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 text-center">
+                            <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                Suspend {selectedIds.size} User{selectedIds.size !== 1 ? 's' : ''}?
+                            </h3>
+                            <p className="text-gray-600 mb-2">
+                                The selected {selectedIds.size !== 1 ? 'users' : 'user'} will no longer be able to access the platform.
+                            </p>
+                            <p className="text-sm text-gray-400">This can be reversed individually for each user.</p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => setBulkConfirmOpen(false)}
+                                disabled={isBulkProcessing}
+                                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkConfirm}
+                                disabled={isBulkProcessing}
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isBulkProcessing
+                                    ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Processing...</>
+                                    : `Suspend ${selectedIds.size > 1 ? `All ${selectedIds.size}` : 'User'}`
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
-        </div>
-        <div className="overflow-x-auto">
-            <table className="w-full text-left">
-                <thead>
-                    <tr className="border-b border-gray-200 bg-white">
-                        <th className="px-6 py-3 w-10">
-                            <input type="checkbox" className="rounded border-gray-300" />
-                        </th>
-                        {(['User', 'Email', 'Date', 'Status', 'Plan'] as const).map(col => (
-                            <th key={col} className="px-4 py-3 text-xs font-medium text-gray-500">
-                                <span className="flex items-center gap-1">{col}</span>
-                            </th>
-                        ))}
-                        <th className="px-4 py-3 w-20" />
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {users.length === 0 ? (
-                        <tr>
-                            <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-400">
-                                No users match your search.
-                            </td>
-                        </tr>
-                    ) : users.map(u => (
-                        <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4">
-                                <input type="checkbox" className="rounded border-gray-300" />
-                            </td>
-                            <td className="px-4 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-[#191919] text-xs font-bold">{getInitials(u.name || '')}</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">{u.name}</p>
-                                        <p className="text-xs text-gray-500">@{u.email.split('@')[0]}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td className="px-4 py-4 text-sm text-gray-600">{u.email}</td>
-                            <td className="px-4 py-4 text-sm text-gray-600">{u.signupDate}</td>
-                            <td className="px-4 py-4">
-                                {u.status === 'Active' ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 border border-green-200 text-green-700 text-xs font-medium rounded-md">
-                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />Active
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-md">
-                                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />Blocked
-                                    </span>
-                                )}
-                            </td>
-                            <td className="px-4 py-4">
-                                <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
-                                    {u.planType || 'Free'}
-                                </span>
-                            </td>
-                            <td className="px-4 py-4">
-                                <div className="flex items-center gap-2 justify-end">
-                                    <button
-                                        onClick={() => onViewUser(u.id)}
-                                        title="View user"
-                                        className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        onClick={() => onSuspend(u)}
-                                        title={u.status === 'Active' ? 'Suspend user' : 'Activate user'}
-                                        className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </div>
-);
+        </>
+    );
+};
 
 // ─── Searchable sections for sidebar ─────────────────────────────────────────
 type TabKey = 'dashboard' | 'users' | 'reports' | 'recommended-presets' | 'coupons';
@@ -440,6 +570,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
     const handleReportUpdate = (updatedReport: Report) => {
         setReportsRefreshTrigger(p => p + 1);
         setSelectedReport(updatedReport);
+    };
+
+    const handleBulkSuspend = async (ids: string[]) => {
+        if (!data) return;
+        const activeIds = ids.filter(id => data.users.find(u => u.id === id)?.status === 'Active');
+        await Promise.allSettled(activeIds.map(id => toggleUserStatus(id, false)));
+        setData(prev => prev ? {
+            ...prev,
+            users: prev.users.map(u => ids.includes(u.id) ? { ...u, status: 'Blocked' as const } : u),
+        } : prev);
     };
 
     // Section search handler
@@ -795,6 +935,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack, onViewUse
                             onTableSearchChange={setTableSearch}
                             onViewUser={onViewUser}
                             onSuspend={openSuspendModal}
+                            onBulkSuspend={handleBulkSuspend}
                         />
                     )}
 
